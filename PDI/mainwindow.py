@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow , QLabel
+from PySide6.QtWidgets import QApplication, QMainWindow , QLabel,QFileDialog
 from PyQt6.QtCore import Qt
 from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtGui import QPixmap
@@ -18,7 +18,15 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('PDI')
         self.showMaximized()
                 
+    def teste(self):
+        return
+    
+    def Mudar(self):
+        print("oi")
 
+    def File(self):    
+        file_path, _ = QFileDialog.getOpenFileName(self, 'Selecionar arquivo', '', 'Arquivos de Imagem (*.png *.jpg *.jpeg *.bmp *.gif)')
+        print('Arquivo selecionado:', file_path)
 
 
 if __name__ == "__main__":

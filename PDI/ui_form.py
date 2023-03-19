@@ -41,10 +41,10 @@ class Ui_MainWindow(object):
         self.IconFile.setGeometry(QRect(120, 0, 51, 31))
         self.pushButton = QPushButton(self.centralwidget)
         self.pushButton.setObjectName(u"pushButton")
-        self.pushButton.setGeometry(QRect(90, 630, 87, 26))
+        self.pushButton.setGeometry(QRect(110, 620, 87, 26))
         self.imageLabel = QLabel(self.centralwidget)
         self.imageLabel.setObjectName(u"imageLabel")
-        self.imageLabel.setGeometry(QRect(0, 80, 304, 551))
+        self.imageLabel.setGeometry(QRect(10, 80, 304, 531))
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(50)
         sizePolicy.setVerticalStretch(0)
@@ -62,13 +62,13 @@ class Ui_MainWindow(object):
         self.imageLabel.setAlignment(Qt.AlignCenter)
         self.toolButton = QToolButton(self.centralwidget)
         self.toolButton.setObjectName(u"toolButton")
-        self.toolButton.setGeometry(QRect(0, 2, 51, 25))
+        self.toolButton.setGeometry(QRect(-10, 2, 51, 25))
         self.toolButton_2 = QToolButton(self.centralwidget)
         self.toolButton_2.setObjectName(u"toolButton_2")
         self.toolButton_2.setGeometry(QRect(70, 2, 26, 25))
         self.tabWidget = QTabWidget(self.centralwidget)
         self.tabWidget.setObjectName(u"tabWidget")
-        self.tabWidget.setGeometry(QRect(330, 80, 1021, 551))
+        self.tabWidget.setGeometry(QRect(340, 80, 1011, 531))
         self.tabWidget.setStyleSheet(u"border-color: rgb(255,255,255);\n"
 "border-style: solid;\n"
 "border-width: 2px; \n"
@@ -92,6 +92,9 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
+        self.pushButton.clicked.connect(MainWindow.teste)
+        self.tabWidget.currentChanged.connect(MainWindow.Mudar)
+        self.toolButton.clicked.connect(MainWindow.File)
 
         self.tabWidget.setCurrentIndex(2)
 

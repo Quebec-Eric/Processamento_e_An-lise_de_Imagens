@@ -50,8 +50,8 @@ border-radius: 10px;</string>
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>630</y>
+      <x>110</x>
+      <y>620</y>
       <width>87</width>
       <height>26</height>
      </rect>
@@ -63,10 +63,10 @@ border-radius: 10px;</string>
    <widget class="QLabel" name="imageLabel">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>60</y>
+      <x>10</x>
+      <y>80</y>
       <width>304</width>
-      <height>551</height>
+      <height>531</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -107,7 +107,7 @@ border-radius: 20px;</string>
    <widget class="QToolButton" name="toolButton">
     <property name="geometry">
      <rect>
-      <x>0</x>
+      <x>-10</x>
       <y>2</y>
       <width>51</width>
       <height>25</height>
@@ -133,10 +133,10 @@ border-radius: 20px;</string>
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>330</x>
+      <x>340</x>
       <y>80</y>
-      <width>1021</width>
-      <height>551</height>
+      <width>1011</width>
+      <height>531</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -178,5 +178,59 @@ border-radius: 20px;</string>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>teste()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>133</x>
+     <y>665</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>721</x>
+     <y>369</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tabWidget</sender>
+   <signal>currentChanged(int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>Mudar()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>840</x>
+     <y>378</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>721</x>
+     <y>369</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>File()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>15</x>
+     <y>37</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>721</x>
+     <y>369</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>teste()</slot>
+  <slot>Mudar()</slot>
+  <slot>File()</slot>
+ </slots>
 </ui>
