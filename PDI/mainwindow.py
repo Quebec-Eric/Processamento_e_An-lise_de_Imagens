@@ -3,7 +3,7 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 from PySide6 import QtWidgets, QtGui
-
+from PIL import Image
 from ui_form import Ui_MainWindow
 import cv2
 import numpy as np
@@ -100,27 +100,28 @@ class SubWindow(QMainWindow):
         self.pixmap = rotated_pixmap
 
     def adjust_contrast(self):
+    # Carregar a imagem em tons de cinza
+        img_gray = Image.open(img).convert('L')
+        img_array = np.array(img_gray)
+
+    # Definir os valores mínimo e máximo de intensidade da imagem com base nos valores dos sliders
         min_val = self.min_slider.value()
         max_val = self.max_slider.value()
 
-        if min_val >= max_val:
-            return
+    # Normalizar os valores dos pixels para o intervalo [0, 255]
+        img_array_norm = (img_array - min_val) / (max_val - min_val) * 255
+        img_array_norm = np.clip(img_array_norm, 0, 255).astype(np.uint8)
 
-        img = cv2.imread("R.png", cv2.IMREAD_GRAYSCALE)
-        np_img = np.array(img, dtype=np.float32)
+    # Converter a imagem numpy de volta para PIL
+        img_contrast = Image.fromarray(img_array_norm)
 
-    # Normalizando a imagem para o intervalo [0, 1]
-        np_img /= 255.0
+    # Salvar a imagem resultante temporariamente em um arquivo
+        temp_path = "temp.png"
+        img_contrast.save(temp_path)
 
-    # Aplicando o ajuste de contraste
-        np_img = (np_img - min_val/255.0) * (255.0/(max_val - min_val))
-        np_img = np.clip(np_img, 0, 1)
+    # Exibir a imagem resultante na sub-janela
+        self.show_image(temp_path)
 
-    # Convertendo a imagem de volta para o formato uint8
-        np_img = (np_img * 255.0).astype(np.uint8)
-
-    # Atualizando a imagem exibida na sub janela
-        self.show_image(cv2.cvtColor(np_img, cv2.COLOR_BGR2GRAY))
         
 
 
