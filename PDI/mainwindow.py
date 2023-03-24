@@ -2,6 +2,7 @@ import sys
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
+from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6 import QtWidgets, QtGui
 from PIL import Image
 from ui_form import Ui_MainWindow
@@ -10,7 +11,7 @@ import numpy as np
 
 from ui_form import Ui_MainWindow
 
-img = "R.png"
+img = None
 
 
 class SubWindow(QMainWindow):
@@ -26,14 +27,73 @@ class SubWindow(QMainWindow):
         self.view.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
 
         # Adicionando botões
-        self.zoom_in_button = QtWidgets.QPushButton("Zoom In")
+        self.zoom_in_button = QtWidgets.QPushButton("")
+        icon = QtGui.QIcon("zoom.png")
+        icon_size = QtCore.QSize(40, 40)
+        self.zoom_in_button.setIconSize(icon_size)
+        self.zoom_in_button.setIcon(icon)
+        self.zoom_in_button.setFixedSize(icon_size + QtCore.QSize(6,6))
+        self.zoom_in_button.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background-color: none;
+                padding: 0px;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+            }
+        """)
         self.zoom_in_button.clicked.connect(self.zoom_in)
+        self.zoom_in_button.setAutoFillBackground(True)
 
-        self.zoom_out_button = QtWidgets.QPushButton("Zoom Out")
+        self.zoom_out_button = QtWidgets.QPushButton("")
+        iconO = QtGui.QIcon("zoomout.png")
+        self.zoom_out_button.setIcon(iconO)
+        self.zoom_out_button.setIconSize(icon_size)
+        self.zoom_out_button.setFixedSize(icon_size + QtCore.QSize(6, 6))
+        self.zoom_out_button.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background-color: none;
+                padding: 0px;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+            }
+        """)
         self.zoom_out_button.clicked.connect(self.zoom_out)
+        self.zoom_out_button.setAutoFillBackground(True)
 
-        self.rotate_button = QtWidgets.QPushButton("Rotate")
+        self.rotate_button = QtWidgets.QPushButton("")
+        iconR = QtGui.QIcon("rodar.png")
+        self.rotate_button.setIcon(iconR)
+        self.rotate_button.setIconSize(icon_size)
+        self.rotate_button.setFixedSize(icon_size + QtCore.QSize(6, 6))
+        self.rotate_button.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background-color: none;
+                padding: 0px;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+            }
+        """)
         self.rotate_button.clicked.connect(self.rotate)
+        self.rotate_button.setAutoFillBackground(True)
+
+        # Adicionando os botões no layout
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.addWidget(self.zoom_in_button)
+        button_layout.addWidget(self.zoom_out_button)
+        button_layout.addWidget(self.rotate_button)
+
+        # Adicionando o layout na janela principal
+        central_widget = QtWidgets.QWidget()
+        central_widget.setLayout(button_layout)
+        self.setCentralWidget(central_widget)
+
+
 
         # Adicionando barras de deslizamento
         self.min_slider = QSlider(Qt.Horizontal)
@@ -122,7 +182,27 @@ class SubWindow(QMainWindow):
     # Exibir a imagem resultante na sub-janela
         self.show_image(temp_path)
 
-        
+
+class Janela(QDialog):
+    def  __init__(self, parent=None):
+        super().__init__(parent)
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle("Colaboradores")
+        # Define as propriedades da janela
+        self.resize(270, 110)
+        # Create a QVBoxLayout instance
+        layout = QVBoxLayout()
+        # Add widgets to the layout
+        layout.addWidget(QPushButton("Eric Azevedo de Oliveira"))
+        layout.addWidget(QPushButton("--------------"))
+        layout.addWidget(QPushButton("-------------"))
+        layout.addStretch()
+        # Set the layout on the application's window
+        self.setLayout(layout)
+
+       
 
 
 class MainWindow(QMainWindow):
@@ -143,10 +223,19 @@ class MainWindow(QMainWindow):
     def Mudar(self):
         print("oi")
 
+    def Funcionamento(self):
+
+         print("oi")
+
+    def Colaboradores(self):
+        self.janela = Janela(self)
+        self.janela.show()
+        
     def File(self):
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, 'Selecionar arquivo', '', 'Arquivos de Imagem (*.png *.jpg *.jpeg *.bmp *.gif)')
-        self.subwindow.show_image(file_path)
+        global img
+        fileName, _ = QFileDialog.getOpenFileName(self, "Select Image File", "", "Image Files (*.png *.jpg *.bmp *.tiff)")
+        if fileName:
+           img = fileName
 
 
 if __name__ == "__main__":
