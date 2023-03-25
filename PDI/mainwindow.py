@@ -250,7 +250,7 @@ class MainWindow(QMainWindow):
         self.showMaximized()
         self.ui.tabWidget.currentChanged.connect(self.tab_changed)  
     
-    
+        
     def mudarAbaImagem(self):
         # Verifica se a aba de imagem já existe
         for i in range(self.ui.tabWidget.count()):
@@ -259,16 +259,28 @@ class MainWindow(QMainWindow):
                 layout = tab_imagem.layout()
                 if layout is not None:
                     label = layout.itemAt(0).widget()
+                    button = layout.itemAt(1).widget()
+                    spacer = layout.itemAt(2)
                 else:
                     label = QLabel()
+                    button = QPushButton("Botão")
+                    spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
                     layout = QVBoxLayout(tab_imagem)
                     layout.addWidget(label)
+                    layout.addWidget(button)
+                    layout.addItem(spacer)
+                    layout.setAlignment(Qt.AlignLeft)
                 break
         else:
             tab_imagem = QWidget()
             layout = QVBoxLayout(tab_imagem)
             label = QLabel()
+            button = QPushButton("Botão")
+            spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
             layout.addWidget(label)
+            layout.addWidget(button)
+            layout.addItem(spacer)
+            layout.setAlignment(Qt.AlignLeft)
 
             self.ui.tabWidget.addTab(tab_imagem, "IMG")
 
@@ -279,11 +291,47 @@ class MainWindow(QMainWindow):
             label.setMaximumWidth(self.ui.tabWidget.width() // 3)
             label.setMaximumHeight(self.ui.tabWidget.height() // 1)
             label.setPixmap(pixmap)
+            #cv2.imshow('Imagem original', pixmap)
             label.setStyleSheet("border: none;")
+            button.setMaximumWidth(label.maximumWidth())
         except:
             label.setText("Imagem não encontrada.")
 
-    
+        button.clicked.connect(self.on_botao_clicado)
+
+    def on_botao_clicado(self):
+            img1 = cv2.imread('R.png', cv2.IMREAD_GRAYSCALE)
+            # Redimensionando a imagem e a janela
+            scale_percent = 10  # reduzindo a escala da imagem para 50%
+            width = int(img1.shape[1] * scale_percent / 100)
+            height = int(img1.shape[0] * scale_percent / 100)
+            dim = (width, height)
+            img1 = cv2.resize(img1, dim, interpolation=cv2.INTER_AREA)
+
+            img2 = cv2.imread('temp.png', cv2.IMREAD_GRAYSCALE)
+            # Redimensionando a imagem e a janela
+            scale_percent = 10  # reduzindo a escala da imagem para 50%
+            width = int(img2.shape[1] * scale_percent / 100)
+            height = int(img2.shape[0] * scale_percent / 100)
+            dim = (width, height)
+            img2 = cv2.resize(img2, dim, interpolation=cv2.INTER_AREA)
+
+
+            cv2.namedWindow('Original', cv2.WINDOW_AUTOSIZE)
+            cv2.imshow('Original', img1)
+            
+            cv2.namedWindow('Segmentada', cv2.WINDOW_AUTOSIZE)
+            cv2.imshow('Segmentada', img2)
+            
+            # Redimensionando a janela
+            cv2.resizeWindow('Original', width, height)
+            cv2.moveWindow('Original', 0, 0)  # mover a janela para (0,0)
+            
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+
+        
 
     def tab_changed(self):
         if(self.ui.tabWidget.currentIndex()==0):
