@@ -1,6 +1,7 @@
 import sys
 from PySide6.QtCore import *
 from PySide6.QtGui import *
+from PySide6.QtWidgets import QTabWidget
 from PySide6.QtWidgets import *
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6 import QtWidgets, QtGui
@@ -183,6 +184,38 @@ class SubWindow(QMainWindow):
         self.show_image(temp_path)
 
 
+class Logo(QDialog):
+    def __init__(self,parent=None):
+        super().__init__(parent)
+
+        # Configura a janela
+        self.setWindowTitle('Projeto')
+        self.setGeometry(100, 100, 400, 200)
+
+       # Carrega a imagem e redimensiona para 100x100 pixels
+        pixmap = QPixmap('puc_minas.png').scaled(200, 200)  
+
+        # Cria o label com a logo do projeto
+        logo_label = QLabel(self)
+        logo_label.setPixmap(pixmap)
+        logo_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        # Cria o label com o nome dos realizadores
+        names_label = QLabel(self)
+        names_label.setText('Realizadores: Fulano e Ciclano')
+        names_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+
+        # Cria o layout vertical e adiciona os labels
+        layout = QVBoxLayout()
+        layout.addWidget(logo_label)
+        layout.addWidget(names_label)
+
+        # Configura o layout na janela
+        self.setLayout(layout)
+
+
+
+
+
 class Janela(QDialog):
     def  __init__(self, parent=None):
         super().__init__(parent)
@@ -215,17 +248,65 @@ class MainWindow(QMainWindow):
     def init_components(self):
         self.setWindowTitle('PDI')
         self.showMaximized()
+        self.ui.tabWidget.currentChanged.connect(self.tab_changed)  
+    
+    
+    def mudarAbaImagem(self):
+        # Verifica se a aba de imagem já existe
+        for i in range(self.ui.tabWidget.count()):
+            if self.ui.tabWidget.tabText(i) == "IMG":
+                tab_imagem = self.ui.tabWidget.widget(i)
+                layout = tab_imagem.layout()
+                if layout is not None:
+                    label = layout.itemAt(0).widget()
+                else:
+                    label = QLabel()
+                    layout = QVBoxLayout(tab_imagem)
+                    layout.addWidget(label)
+                break
+        else:
+            tab_imagem = QWidget()
+            layout = QVBoxLayout(tab_imagem)
+            label = QLabel()
+            layout.addWidget(label)
+
+            self.ui.tabWidget.addTab(tab_imagem, "IMG")
+
+        try:
+
+            pixmap = QPixmap('temp.png')
+            pixmap = pixmap.scaled(self.ui.tabWidget.width() // 3, self.ui.tabWidget.height() // 1)
+            label.setMaximumWidth(self.ui.tabWidget.width() // 3)
+            label.setMaximumHeight(self.ui.tabWidget.height() // 1)
+            label.setPixmap(pixmap)
+            label.setStyleSheet("border: none;")
+        except:
+            label.setText("Imagem não encontrada.")
+
+    
+
+    def tab_changed(self):
+        if(self.ui.tabWidget.currentIndex()==0):
+            self.mudarAbaImagem()
+        elif(self.ui.tabWidget.currentIndex()==1):
+            print("Matrix")
+        else:
+            print("Resultado") 
 
     def teste(self):
         self.subwindow = SubWindow(self)
         self.subwindow.show()
 
     def Mudar(self):
-        print("oi")
+        print("")
 
     def Funcionamento(self):
+        return
 
-         print("oi")
+    def Pontos(self):    
+        self.Logo =  Logo(self)
+        self.Logo.show()
+
 
     def Colaboradores(self):
         self.janela = Janela(self)
