@@ -55,7 +55,7 @@ border-radius: 10px;</string>
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>download.png</normaloff>download.png</iconset>
+      <normaloff>App/Imagens/download.png</normaloff>App/Imagens/download.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -94,7 +94,7 @@ border-radius: 10px;</string>
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>Pasta.png</normaloff>Pasta.png</iconset>
+      <normaloff>App/Imagens/Pasta.png</normaloff>App/Imagens/Pasta.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -175,7 +175,7 @@ border-radius: 20px;</string>
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>medicina-logo-886CC8F59D-seeklogo.com.png</pixmap>
+     <pixmap>App/Imagens/medicina-logo-886CC8F59D-seeklogo.com.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
@@ -201,7 +201,7 @@ border-radius: 20px;</string>
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>Pesssoas.png</normaloff>Pesssoas.png</iconset>
+      <normaloff>App/Imagens/Pesssoas.png</normaloff>App/Imagens/Pesssoas.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -230,7 +230,7 @@ border-radius: 20px;</string>
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>57108.png</normaloff>57108.png</iconset>
+      <normaloff>App/Imagens/57108.png</normaloff>App/Imagens/57108.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -252,14 +252,14 @@ border-radius: 20px;</string>
      </rect>
     </property>
     <property name="autoFillBackground">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="text">
      <string/>
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>3pontos.png</normaloff>3pontos.png</iconset>
+      <normaloff>App/Imagens/3pontos.png</normaloff>App/Imagens/3pontos.png</iconset>
     </property>
     <property name="iconSize">
      <size>
