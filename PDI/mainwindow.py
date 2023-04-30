@@ -1,243 +1,19 @@
 import sys
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import QTabWidget
-from PySide6.QtWidgets import *
-from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6 import QtWidgets, QtGui
-from PIL import Image
-from ui_form import Ui_MainWindow
+
+sys.path.append('App/Imports')
+
+from Imports import *
+from App.Curso.Logo import Logo
+from App.Colaboradores.JanelaColaboradores import Janela
+from App.JanelaCinza.JanelaSeg import SubWindow
+from App.PreparativosRede.PreProcessamentoImagens.LerDiretoriosIMg import LeituraDiretorio
+from App.PreparativosRede.PreProcessamentoImagens.AumentandoDados import AumentarDados
 import cv2
 import numpy as np
-
-from ui_form import Ui_MainWindow
-
 img = None
-
-
-class SubWindow(QMainWindow):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle('Sub Window')
-
-        self.view = QGraphicsView()
-        self.scene = QGraphicsScene()
-        self.view.setScene(self.scene)
-        self.view.setRenderHint(QPainter.Antialiasing)
-        self.view.setRenderHint(QPainter.SmoothPixmapTransform)
-        self.view.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
-
-        # Adicionando botões
-        self.zoom_in_button = QtWidgets.QPushButton("")
-        icon = QtGui.QIcon("zoom.png")
-        icon_size = QtCore.QSize(40, 40)
-        self.zoom_in_button.setIconSize(icon_size)
-        self.zoom_in_button.setIcon(icon)
-        self.zoom_in_button.setFixedSize(icon_size + QtCore.QSize(6,6))
-        self.zoom_in_button.setStyleSheet("""
-            QPushButton {
-                border: none;
-                background-color: none;
-                padding: 0px;
-            }
-            QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.2);
-            }
-        """)
-        self.zoom_in_button.clicked.connect(self.zoom_in)
-        self.zoom_in_button.setAutoFillBackground(True)
-
-        self.zoom_out_button = QtWidgets.QPushButton("")
-        iconO = QtGui.QIcon("zoomout.png")
-        self.zoom_out_button.setIcon(iconO)
-        self.zoom_out_button.setIconSize(icon_size)
-        self.zoom_out_button.setFixedSize(icon_size + QtCore.QSize(6, 6))
-        self.zoom_out_button.setStyleSheet("""
-            QPushButton {
-                border: none;
-                background-color: none;
-                padding: 0px;
-            }
-            QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.2);
-            }
-        """)
-        self.zoom_out_button.clicked.connect(self.zoom_out)
-        self.zoom_out_button.setAutoFillBackground(True)
-
-        self.rotate_button = QtWidgets.QPushButton("")
-        iconR = QtGui.QIcon("rodar.png")
-        self.rotate_button.setIcon(iconR)
-        self.rotate_button.setIconSize(icon_size)
-        self.rotate_button.setFixedSize(icon_size + QtCore.QSize(6, 6))
-        self.rotate_button.setStyleSheet("""
-            QPushButton {
-                border: none;
-                background-color: none;
-                padding: 0px;
-            }
-            QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.2);
-            }
-        """)
-        self.rotate_button.clicked.connect(self.rotate)
-        self.rotate_button.setAutoFillBackground(True)
-
-        # Adicionando os botões no layout
-        button_layout = QtWidgets.QHBoxLayout()
-        button_layout.addWidget(self.zoom_in_button)
-        button_layout.addWidget(self.zoom_out_button)
-        button_layout.addWidget(self.rotate_button)
-
-        # Adicionando o layout na janela principal
-        central_widget = QtWidgets.QWidget()
-        central_widget.setLayout(button_layout)
-        self.setCentralWidget(central_widget)
-
-
-
-        # Adicionando barras de deslizamento
-        self.min_slider = QSlider(Qt.Horizontal)
-        self.min_slider.setMinimum(0)
-        self.min_slider.setMaximum(255)
-        self.min_slider.setValue(0)
-        self.min_slider.setTickPosition(QSlider.TicksBelow)
-        self.min_slider.setTickInterval(1)
-        self.min_slider.valueChanged.connect(self.adjust_contrast)
-
-        self.max_slider = QSlider(Qt.Horizontal)
-        self.max_slider.setMinimum(0)
-        self.max_slider.setMaximum(255)
-        self.max_slider.setValue(255)
-        self.max_slider.setTickPosition(QSlider.TicksBelow)
-        self.max_slider.setTickInterval(1)
-        self.max_slider.valueChanged.connect(self.adjust_contrast)
-
-        # Adicionando layout para botões e barras de deslizamento
-        button_layout = QtWidgets.QHBoxLayout()
-        button_layout.addWidget(self.zoom_in_button)
-        button_layout.addWidget(self.zoom_out_button)
-        button_layout.addWidget(self.rotate_button)
-
-        slider_layout = QtWidgets.QHBoxLayout()
-        slider_layout.addWidget(QLabel("Min"))
-        slider_layout.addWidget(self.min_slider)
-        slider_layout.addWidget(QLabel("Max"))
-        slider_layout.addWidget(self.max_slider)
-
-        # Adicionando layout principal para janela
-        main_layout = QtWidgets.QVBoxLayout()
-        main_layout.addWidget(self.view)
-        main_layout.addLayout(button_layout)
-        main_layout.addLayout(slider_layout)
-
-        widget = QtWidgets.QWidget()
-        widget.setLayout(main_layout)
-        self.setCentralWidget(widget)
-
-        # Carregando imagem
-        self.pixmap = QPixmap(img)
-        self.scene.addPixmap(self.pixmap)
-
-    def show_image(self, img):
-        self.scene.clear()
-        pixmap = QPixmap(img)
-        self.scene.addPixmap(pixmap)
-        self.pixmap = pixmap
-
-    def zoom_in(self):
-        self.view.scale(1.2, 1.2)
-
-    def zoom_out(self):
-        self.view.scale(1 / 1.2, 1 / 1.2)
-
-    def rotate(self):
-        transform = QTransform()
-        transform.rotate(90)
-        rotated_pixmap = self.pixmap.transformed(
-            transform, Qt.SmoothTransformation)
-        self.scene.clear()
-        self.scene.addPixmap(rotated_pixmap)
-        self.pixmap = rotated_pixmap
-
-    def adjust_contrast(self):
-    # Carregar a imagem em tons de cinza
-        img_gray = Image.open(img).convert('L')
-        img_array = np.array(img_gray)
-
-    # Definir os valores mínimo e máximo de intensidade da imagem com base nos valores dos sliders
-        min_val = self.min_slider.value()
-        max_val = self.max_slider.value()
-
-    # Normalizar os valores dos pixels para o intervalo [0, 255]
-        img_array_norm = (img_array - min_val) / (max_val - min_val) * 255
-        img_array_norm = np.clip(img_array_norm, 0, 255).astype(np.uint8)
-
-    # Converter a imagem numpy de volta para PIL
-        img_contrast = Image.fromarray(img_array_norm)
-
-    # Salvar a imagem resultante temporariamente em um arquivo
-        temp_path = "temp.png"
-        img_contrast.save(temp_path)
-
-    # Exibir a imagem resultante na sub-janela
-        self.show_image(temp_path)
-
-
-class Logo(QDialog):
-    def __init__(self,parent=None):
-        super().__init__(parent)
-
-        # Configura a janela
-        self.setWindowTitle('Projeto')
-        self.setGeometry(100, 100, 400, 200)
-
-       # Carrega a imagem e redimensiona para 100x100 pixels
-        pixmap = QPixmap('puc_minas.png').scaled(200, 200)  
-
-        # Cria o label com a logo do projeto
-        logo_label = QLabel(self)
-        logo_label.setPixmap(pixmap)
-        logo_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        # Cria o label com o nome dos realizadores
-        names_label = QLabel(self)
-        names_label.setText('Realizadores: Fulano e Ciclano')
-        names_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-
-        # Cria o layout vertical e adiciona os labels
-        layout = QVBoxLayout()
-        layout.addWidget(logo_label)
-        layout.addWidget(names_label)
-
-        # Configura o layout na janela
-        self.setLayout(layout)
-
-
-
-
-
-class Janela(QDialog):
-    def  __init__(self, parent=None):
-        super().__init__(parent)
-        self.initUI()
-
-    def initUI(self):
-        self.setWindowTitle("Colaboradores")
-        # Define as propriedades da janela
-        self.resize(270, 110)
-        # Create a QVBoxLayout instance
-        layout = QVBoxLayout()
-        # Add widgets to the layout
-        layout.addWidget(QPushButton("Eric Azevedo de Oliveira"))
-        layout.addWidget(QPushButton("--------------"))
-        layout.addWidget(QPushButton("-------------"))
-        layout.addStretch()
-        # Set the layout on the application's window
-        self.setLayout(layout)
-
-       
-
-
+train = []
+test = []
+#janela Principal do programa onde sera realizado todo o programa em si
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -245,90 +21,163 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         self.init_components()
 
+    
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_F11:
+            if self.isFullScreen():
+                self.showNormal()
+            else:
+                self.showFullScreen()
+
     def init_components(self):
         self.setWindowTitle('PDI')
         self.showMaximized()
         self.ui.tabWidget.currentChanged.connect(self.tab_changed)  
-    
         
     def mudarAbaImagem(self):
-        # Verifica se a aba de imagem já existe
+        self.automatica()
+        # Encontra ou cria o widget de imagem
         for i in range(self.ui.tabWidget.count()):
             if self.ui.tabWidget.tabText(i) == "IMG":
                 tab_imagem = self.ui.tabWidget.widget(i)
                 layout = tab_imagem.layout()
                 if layout is not None:
-                    label = layout.itemAt(0).widget()
-                    button = layout.itemAt(1).widget()
-                    spacer = layout.itemAt(2)
+                    label1 = layout.itemAt(0).widget()
+                    label2 = QLabel() # Novo QLabel para a segunda imagem
+                    button_verificar = layout.itemAt(1).widget()
+                    button_hist = layout.itemAt(2).widget()
                 else:
-                    label = QLabel()
-                    button = QPushButton("Botão")
-                    spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-                    layout = QVBoxLayout(tab_imagem)
-                    layout.addWidget(label)
-                    layout.addWidget(button)
-                    layout.addItem(spacer)
+                    label1 = QLabel()
+                    label2 = QLabel() # Novo QLabel para a segunda imagem
+                    button_verificar = QPushButton("Verificar")
+                    button_hist = QPushButton("Hist")
+                    layout = QHBoxLayout(tab_imagem) # Alteração do QVBoxLayout para QHBoxLayout
+                    layout.addWidget(label1)
+                    layout.addWidget(label2) # Adiciona o novo QLabel
+                    layout.addWidget(button_verificar)
+                    layout.addWidget(button_hist)
                     layout.setAlignment(Qt.AlignLeft)
                 break
         else:
             tab_imagem = QWidget()
-            layout = QVBoxLayout(tab_imagem)
-            label = QLabel()
-            button = QPushButton("Botão")
-            spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-            layout.addWidget(label)
-            layout.addWidget(button)
-            layout.addItem(spacer)
+            layout = QHBoxLayout(tab_imagem) # Alteração do QVBoxLayout para QHBoxLayout
+            label1 = QLabel()
+            label2 = QLabel() # Novo QLabel para a segunda imagem
+            button_verificar = QPushButton("Verificar")
+            button_hist = QPushButton("Hist")
+            layout.addWidget(label1)
+            layout.addWidget(label2) # Adiciona o novo QLabel
+            layout.addWidget(button_verificar)
+            layout.addWidget(button_hist)
             layout.setAlignment(Qt.AlignLeft)
 
             self.ui.tabWidget.addTab(tab_imagem, "IMG")
 
         try:
-
-            pixmap = QPixmap('temp.png')
-            pixmap = pixmap.scaled(self.ui.tabWidget.width() // 3, self.ui.tabWidget.height() // 1)
-            label.setMaximumWidth(self.ui.tabWidget.width() // 3)
-            label.setMaximumHeight(self.ui.tabWidget.height() // 1)
-            label.setPixmap(pixmap)
-            #cv2.imshow('Imagem original', pixmap)
-            label.setStyleSheet("border: none;")
-            button.setMaximumWidth(label.maximumWidth())
+            # Carrega a primeira imagem e configura o primeiro QLabel
+            pixmap1 = QPixmap('App/Imagens/temp.png')
+            pixmap1 = pixmap1.scaled(self.ui.tabWidget.width() // 3, self.ui.tabWidget.height() // 1)
+            label1.setMaximumWidth(self.ui.tabWidget.width() // 3)
+            label1.setMaximumHeight(self.ui.tabWidget.height() // 1)
+            label1.setPixmap(pixmap1)
+            label1.setStyleSheet("border: none;")
+            button_verificar.setMaximumWidth(label1.maximumWidth())
+            button_hist.setMaximumWidth(label1.maximumWidth())
+            
+            # Carrega a segunda imagem e configura o segundo QLabel
+            pixmap2 = QPixmap('App/Imagens/automatica.png')
+            pixmap2 = pixmap2.scaled(self.ui.tabWidget.width() // 3, self.ui.tabWidget.height() // 1)
+            label2.setMaximumWidth(self.ui.tabWidget.width() // 3)
+            label2.setMaximumHeight(self.ui.tabWidget.height() // 1)
+            label2.setPixmap(pixmap2)
+            label2.setStyleSheet("border: none;")
+            
         except:
-            label.setText("Imagem não encontrada.")
+            label1.setText("Imagem não encontrada.")
 
-        button.clicked.connect(self.on_botao_clicado)
+        button_verificar.clicked.connect(self.on_botao_clicado)
+        button_hist.clicked.connect(self.on_botao_hist_clicado)
+
+
+        
+    def on_botao_hist_clicado(self):
+        img = cv2.imread('App/Imagens/temp.png', cv2.IMREAD_GRAYSCALE)
+        hist = cv2.calcHist([img], [0], None, [256], [0, 256])
+        
+        mean_val = int(cv2.mean(img)[0])
+        min_val, max_val, _, _ = cv2.minMaxLoc(img)
+        
+        plt.figure()
+        plt.title('Histograma de Tonalidades de Cinza')
+        plt.xlabel('Intensidade de Cinza')
+        plt.ylabel('Frequência')
+        plt.plot(hist, color='gray')
+        plt.axvline(x=mean_val, color='red', label=f'Média: {mean_val}')
+        plt.text(0.05, 0.95, f'Máximo: {max_val:.0f}\nMínimo: {min_val:.0f}', transform=plt.gca().transAxes, va='top', ha='left')
+        plt.legend(loc='upper right')
+        plt.xlim([0, 256])
+        plt.ylim([0, max(hist)+1000])
+        plt.bar(range(256), hist.flatten(), width=1, color='gray')
+        plt.show()
+
 
     def on_botao_clicado(self):
-            img1 = cv2.imread('R.png', cv2.IMREAD_GRAYSCALE)
-            # Redimensionando a imagem e a janela
-            scale_percent = 10  # reduzindo a escala da imagem para 50%
+        # Cria um diálogo de mensagem com dois botões
+        msg_box = QMessageBox()
+        msg_box.setText("Selecione o modo de exibição:")
+        msg_box.addButton("Automático", QMessageBox.YesRole)
+        msg_box.addButton("Não Automático", QMessageBox.NoRole)
+        msg_box.exec_()
+        
+        # Obtém a resposta do usuário
+        resposta = msg_box.clickedButton().text()
+
+        # Exibe a imagem de acordo com a resposta do usuário
+        if resposta == "Automático":
+            # Exibe a imagem automaticamente
+            img1 = cv2.imread('App/Raio-X/R.png', cv2.IMREAD_GRAYSCALE)
+            scale_percent = 10 
             width = int(img1.shape[1] * scale_percent / 100)
             height = int(img1.shape[0] * scale_percent / 100)
             dim = (width, height)
             img1 = cv2.resize(img1, dim, interpolation=cv2.INTER_AREA)
-
-            img2 = cv2.imread('temp.png', cv2.IMREAD_GRAYSCALE)
-            # Redimensionando a imagem e a janela
-            scale_percent = 10  # reduzindo a escala da imagem para 50%
+            img2 = cv2.imread('App/Imagens/automatica.png', cv2.IMREAD_GRAYSCALE)
+            scale_percent = 10  
             width = int(img2.shape[1] * scale_percent / 100)
             height = int(img2.shape[0] * scale_percent / 100)
             dim = (width, height)
             img2 = cv2.resize(img2, dim, interpolation=cv2.INTER_AREA)
-
-
             cv2.namedWindow('Original', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('Original', img1)
-            
             cv2.namedWindow('Segmentada', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('Segmentada', img2)
-            
-            # Redimensionando a janela
             cv2.resizeWindow('Original', width, height)
-            cv2.moveWindow('Original', 0, 0)  # mover a janela para (0,0)
-            
+            cv2.moveWindow('Original', 0, 0)              
             cv2.waitKey(0)
             cv2.destroyAllWindows()
+        elif resposta == "Não Automático":
+                # Exibe a imagem automaticamente
+            img1 = cv2.imread('App/Raio-X/R.png', cv2.IMREAD_GRAYSCALE)
+            scale_percent = 10 
+            width = int(img1.shape[1] * scale_percent / 100)
+            height = int(img1.shape[0] * scale_percent / 100)
+            dim = (width, height)
+            img1 = cv2.resize(img1, dim, interpolation=cv2.INTER_AREA)
+            img2 = cv2.imread('App/Imagens/temp.png', cv2.IMREAD_GRAYSCALE)
+            scale_percent = 10  
+            width = int(img2.shape[1] * scale_percent / 100)
+            height = int(img2.shape[0] * scale_percent / 100)
+            dim = (width, height)
+            img2 = cv2.resize(img2, dim, interpolation=cv2.INTER_AREA)
+            cv2.namedWindow('Original', cv2.WINDOW_AUTOSIZE)
+            cv2.imshow('Original', img1)
+            cv2.namedWindow('Segmentada', cv2.WINDOW_AUTOSIZE)
+            cv2.imshow('Segmentada', img2)
+            cv2.resizeWindow('Original', width, height)
+            cv2.moveWindow('Original', 0, 0)              
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+        
 
 
         
@@ -342,8 +191,8 @@ class MainWindow(QMainWindow):
             print("Resultado") 
 
     def teste(self):
-        self.subwindow = SubWindow(self)
-        self.subwindow.show()
+        subwindow = SubWindow(self, img2=img)
+        subwindow.show()
 
     def Mudar(self):
         print("")
@@ -352,23 +201,91 @@ class MainWindow(QMainWindow):
         return
 
     def Pontos(self):    
-        self.Logo =  Logo(self)
-        self.Logo.show()
+        logo = Logo(self)
+        logo.show()
 
 
     def Colaboradores(self):
-        self.janela = Janela(self)
-        self.janela.show()
-        
+        global train , test
+        #self.janela = Janela(self)
+        #self.janela.show()
+        ld=LeituraDiretorio(QFileDialog.getExistingDirectory(self, "Selecione o diretório"))
+        train=ld.train
+        test=ld.test
+        print("1-------")
+        #print(train[1])
+        f=AumentarDados(train)
+        train=f.augmentData
+        print("2-------")
+        print(len(train))
+
     def File(self):
         global img
-        fileName, _ = QFileDialog.getOpenFileName(self, "Select Image File", "", "Image Files (*.png *.jpg *.bmp *.tiff)")
+        fileName, _ = QFileDialog.getOpenFileName(self, "")
         if fileName:
            img = fileName
 
+    def automatica(self):
+        img = cv2.imread('App/Raio-X/R.png', cv2.IMREAD_GRAYSCALE)
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    widget = MainWindow()
-    widget.show()
-    sys.exit(app.exec())
+        # Redimensionar a imagem para 800x800 pixels
+        img = cv2.resize(img, (800, 800))
+
+        # Rotacionar a imagem 90 graus no sentido horário
+
+        for i in range(4):
+            img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+        # Histograma da imagem
+        hist, bins = np.histogram(img.ravel(), 256, [0, 256])
+
+        # Total de pixels na imagem
+        total_pixels = img.shape[0] * img.shape[1]
+
+        # Inicializar variáveis
+        w0 = 0
+        sum0 = 0
+        mean0 = 0
+        max_var = 0
+        threshold = 0
+
+        # Iterar sobre os possíveis valores de limiar
+        for t in range(256):
+            w1 = total_pixels - w0
+            if w1 == 0:
+                break
+            sum1 = sum(hist[t+1:] * np.arange(t+1, 256))
+            mean1 = sum1 / w1
+            if w0 == 0:
+                mean0 = 0 # Ou algum outro valor padrão
+            else:
+                mean0 = sum0 / w0
+            var_between = w0 * w1 * (mean0 - mean1) ** 2
+            if var_between > max_var:
+                max_var = var_between
+                threshold = t
+            w0 += hist[t]
+            sum0 += t * hist[t]
+
+        # Limiarização da imagem
+        img_threshold = np.zeros_like(img)
+        img_threshold[img > threshold] = 255
+
+        contours, _ = cv2.findContours(img_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contour = max(contours, key=cv2.contourArea)
+
+        # Cria uma máscara que cobre toda a imagem
+        mask = np.zeros_like(img_threshold)
+
+        # Desenha o contorno da mama na máscara
+        cv2.drawContours(mask, [contour], 0, 255, -1)
+
+        # Preenche a região interna da mama com branco
+        mask[mask == 255] = 1
+        result = img * mask
+        result[result > 0] = 255
+        cv2.imwrite('App/Imagens/automatica.png', result)
+
+
+
+
