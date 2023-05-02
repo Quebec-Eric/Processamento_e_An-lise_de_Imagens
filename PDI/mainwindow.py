@@ -214,10 +214,8 @@ class MainWindow(QMainWindow):
         test=ld.test
         print("1-------")
         #print(train[1])
-        f=AumentarDados(train)
-        train=f.augmentData
-        print("2-------")
-        print(len(train))
+        AumentarDados(train)
+        
 
     def File(self):
         global img
