@@ -1,5 +1,6 @@
 
 import sys
+
 sys.path.append('App/Imports')
 
 from Imports import *
@@ -21,21 +22,24 @@ class AumentarDados:
 
             # Espelha a imagem horizontalmente
             img_h = np.fliplr(img)
-
+            # = img.rotate(180)
+            #espelho = np.fliplr(img)
+            #espelho = np.rot90(img, 2)
             # Equaliza o histograma da imagem original
-            img_eq = self.equalizeHist(img)
+            img_eq = self.equalizeHist(img_h)
 
             # Equaliza o histograma da imagem espelhada
-            img_h_eq = self.equalizeHist(img_h)
+            #img_h_eq = self.equalizeHist(img)
 
             # Adiciona as imagens ao conjunto de treino aumentado
-            self.train_aumentada.extend([img, img_h, img_eq, img_h_eq])
+            #self.train_aumentada.extend([img, img_h, img_eq, img_h_eq])
             
             # Salva as imagens em um arquivo de teste
-            cv2.imwrite("AkiTeste/original" + str(i) + ".png", img)
-            cv2.imwrite("AkiTeste/histrograma" + str(i) + ".png", img_h)
-            cv2.imwrite("AkiTeste/equalizar" + str(i) + ".png", img_eq)
-            cv2.imwrite("AkiTeste/espelhada" + str(i) + ".png", img_h_eq)
+            cv2.imwrite("AkiTeste/equalizadaEEspelhada" + str(i) + ".png", img_h)
+            #cv2.imwrite("AkiTeste/histrograma" + str(i) + ".png", img_h)
+            #cv2.imwrite("AkiTeste/equalizar" + str(i) + ".png", img_h_eq )
+            #cv2.imwrite("AkiTeste/espelhada" + str(i) + ".png", espelho)
+            print(i)
 
 
 

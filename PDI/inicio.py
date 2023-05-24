@@ -1,9 +1,6 @@
 import sys
 sys.path.append('App/Imports')
 
-
-
-
 from Imports import *
 from mainwindow import MainWindow
 from Imports import *
