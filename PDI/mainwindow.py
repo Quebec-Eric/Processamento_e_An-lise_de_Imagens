@@ -122,6 +122,7 @@ class MainWindow(QMainWindow):
 
 
     def on_botao_clicado(self):
+        global img
         # Cria um diálogo de mensagem com dois botões
         msg_box = QMessageBox()
         msg_box.setText("Selecione o modo de exibição:")
@@ -135,7 +136,7 @@ class MainWindow(QMainWindow):
         # Exibe a imagem de acordo com a resposta do usuário
         if resposta == "Automático":
             # Exibe a imagem automaticamente
-            img1 = cv2.imread('App/Raio-X/R.png', cv2.IMREAD_GRAYSCALE)
+            img1 = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
             scale_percent = 10 
             width = int(img1.shape[1] * scale_percent / 100)
             height = int(img1.shape[0] * scale_percent / 100)
@@ -213,8 +214,9 @@ class MainWindow(QMainWindow):
         train=ld.train
         test=ld.test
         print("1-------")
-        #print(train[1])
+        print(train[1])
         AumentarDados(train)
+        print("fim")
         
 
     def File(self):
@@ -224,21 +226,22 @@ class MainWindow(QMainWindow):
            img = fileName
 
     def automatica(self):
-        img = cv2.imread('App/Raio-X/R.png', cv2.IMREAD_GRAYSCALE)
+        global img
+        img1 = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
 
         # Redimensionar a imagem para 800x800 pixels
-        img = cv2.resize(img, (800, 800))
+        img1 = cv2.resize(img1, (800, 800))
 
         # Rotacionar a imagem 90 graus no sentido horário
 
         for i in range(4):
-            img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            img1 = cv2.rotate(img1, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
         # Histograma da imagem
-        hist, bins = np.histogram(img.ravel(), 256, [0, 256])
+        hist, bins = np.histogram(img1.ravel(), 256, [0, 256])
 
         # Total de pixels na imagem
-        total_pixels = img.shape[0] * img.shape[1]
+        total_pixels = img1.shape[0] * img1.shape[1]
 
         # Inicializar variáveis
         w0 = 0
@@ -266,8 +269,8 @@ class MainWindow(QMainWindow):
             sum0 += t * hist[t]
 
         # Limiarização da imagem
-        img_threshold = np.zeros_like(img)
-        img_threshold[img > threshold] = 255
+        img_threshold = np.zeros_like(img1)
+        img_threshold[img1 > threshold] = 255
 
         contours, _ = cv2.findContours(img_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contour = max(contours, key=cv2.contourArea)
@@ -280,7 +283,7 @@ class MainWindow(QMainWindow):
 
         # Preenche a região interna da mama com branco
         mask[mask == 255] = 1
-        result = img * mask
+        result = img1 * mask
         result[result > 0] = 255
         cv2.imwrite('App/Imagens/automatica.png', result)
 
