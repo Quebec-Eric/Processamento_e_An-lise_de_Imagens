@@ -9,6 +9,7 @@ from App.JanelaCinza.JanelaSeg import SubWindow
 from App.PreparativosRede.PreProcessamentoImagens.LerDiretoriosIMg import LeituraDiretorio
 from App.PreparativosRede.PreProcessamentoImagens.AumentandoDados import AumentarDados
 import cv2
+from App.IA.MostrarTxt import MostrarTxt
 import numpy as np
 img = None
 train = []
@@ -287,6 +288,25 @@ class MainWindow(QMainWindow):
         result[result > 0] = 255
         cv2.imwrite('App/Imagens/automatica.png', result)
 
+    def IaMostrar(self):
+        msg_box = QMessageBox()
+        msg_box.setText("Selecione o que quer ver")
+        msg_box.addButton("Sumario da IA", QMessageBox.YesRole)
+        msg_box.addButton("Matricas", QMessageBox.NoRole)
+        msg_box.exec_()
+
+        resposta = msg_box.clickedButton().text()
+        if resposta == "Sumario da IA":
+            caminho_arquivo = "App/IA/model_Binaria.txt"
+            dialogo = MostrarTxt(caminho_arquivo)
+            dialogo.exec()
+
+        elif resposta == "Matricas":
+            matricas_box = QMessageBox()
+            matricas_box.setText("Selecione o que quer ver")
+            matricas_box.addButton("Classificação binaria", QMessageBox.YesRole)
+            matricas_box.addButton("Classificação de 4 classes", QMessageBox.NoRole)
+            matricas_box.exec_()
 
 
 

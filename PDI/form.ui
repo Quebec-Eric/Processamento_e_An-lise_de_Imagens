@@ -106,17 +106,30 @@ border-radius: 10px;</string>
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QToolButton" name="toolButton_2">
+   <widget class="QToolButton" name="IA">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>0</y>
+      <x>180</x>
+      <y>3</y>
       <width>41</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string>IA</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>App/Imagens/IAFoto.png</normaloff>App/Imagens/IAFoto.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>41</width>
+      <height>35</height>
+     </size>
+    </property>
+    <property name="autoRepeat">
+     <bool>false</bool>
     </property>
    </widget>
    <widget class="QTabWidget" name="tabWidget">
@@ -382,6 +395,22 @@ border-radius: 20px;</string>
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>IA</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>IaMostrar()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>200</x>
+     <y>41</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>721</x>
+     <y>369</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>teste()</slot>
@@ -390,5 +419,6 @@ border-radius: 20px;</string>
   <slot>Funcionamento()</slot>
   <slot>Colaboradores()</slot>
   <slot>Pontos()</slot>
+  <slot>IaMostrar()</slot>
  </slots>
 </ui>
