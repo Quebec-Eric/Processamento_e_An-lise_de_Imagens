@@ -288,6 +288,42 @@ class MainWindow(QMainWindow):
         result[result > 0] = 255
         cv2.imwrite('App/Imagens/automatica.png', result)
 
+    def mostrarSumario(self):
+        msg_box = QMessageBox()
+        msg_box.setText("Qual sumario de modelo quer ver ")
+        msg_box.addButton("Sumario classificação binaria", QMessageBox.YesRole)
+        msg_box.addButton("Sumario classificação entre 4", QMessageBox.NoRole)
+        msg_box.exec_()
+
+        resposta = msg_box.clickedButton().text()
+        if resposta=="Sumario classificação binaria":
+            print("binaria")
+            caminho_arquivo = "App/IA/model_Binaria.txt"
+            dialogo = MostrarTxt(caminho_arquivo)
+            dialogo.exec()
+        elif resposta =="Sumario classificação entre 4":
+            print("4 classes")
+            caminho_arquivo = "App/IA/model_4classes.txt"
+            dialogo = MostrarTxt(caminho_arquivo)
+            dialogo.exec()
+               
+        return
+
+    def mostrarMetricas():
+        msg_box = QMessageBox()
+        msg_box.setText("Qual Metrica de Modelo voce quer ")
+        msg_box.addButton("Metricas da classificação binaria", QMessageBox.YesRole)
+        msg_box.addButton("Metricas da classificação entre 4", QMessageBox.NoRole)
+        msg_box.exec_()
+
+        resposta = msg_box.clickedButton().text()
+        if resposta=="Metricas da classificação binaria":
+            print("Binaria")
+        elif resposta =="Metriicas da classificação entre 4":
+            print("4 classes")
+                   
+        return
+
     def IaMostrar(self):
         msg_box = QMessageBox()
         msg_box.setText("Selecione o que quer ver")
@@ -297,9 +333,7 @@ class MainWindow(QMainWindow):
 
         resposta = msg_box.clickedButton().text()
         if resposta == "Sumario da IA":
-            caminho_arquivo = "App/IA/model_Binaria.txt"
-            dialogo = MostrarTxt(caminho_arquivo)
-            dialogo.exec()
+            self.mostrarSumario()
 
         elif resposta == "Matricas":
             matricas_box = QMessageBox()
