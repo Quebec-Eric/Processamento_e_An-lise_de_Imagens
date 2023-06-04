@@ -6,6 +6,7 @@ sys.path.append('App/Imports')
 from Imports import *
 import cv2
 import os
+import re
 import numpy as np
 from PIL import Image
 
@@ -16,30 +17,50 @@ class AumentarDados:
 
     def augmentData(self, imagens):
         for i, imagem in enumerate(imagens):
-
             # Abre a imagem como um array numpy
-            img = np.array(Image.open("App/Raio-X/mamografias/"+imagem))
+            if i >0:
+                img = np.array(Image.open("App/Raio-X/mamografias/"+imagem))
+                
+                # Aplica a expressão regular à variável 'imagem', não à lista 'imagens'
+                match = re.search(r'\((\d+)\)', imagem)
+                if match:
+                    # O método group(1) retorna o primeiro grupo de captura, que é o número entre parênteses
+                    number = int(match.group(1))
+                    new_filename = "AkiTeste/" + str(number) + "_Normal_.png"
+                    new_filename2 = "AkiTeste/" + str(number) + "_Espelhada_.png"
+                    #new_filename3 = "AkiTeste/" + str(number) + "_EspelhadaEQ_.png"
+                    #new_filename4 = "AkiTeste/" + str(number) + "_Histo_.png"
+                    espelho = np.rot90(img, 2)
+                    #img_eq = self.equalizeHist(espelho)
+                    #img_eq2 = self.equalizeHist(img)
+                    cv2.imwrite(new_filename2, espelho)
+                    cv2.imwrite(new_filename, img)
+                    #cv2.imwrite(new_filename3, img_eq)
+                    #cv2.imwrite(new_filename4, img_eq2)
 
-            # Espelha a imagem horizontalmente
-            img_h = np.fliplr(img)
-            # = img.rotate(180)
-            #espelho = np.fliplr(img)
-            #espelho = np.rot90(img, 2)
-            # Equaliza o histograma da imagem original
-            img_eq = self.equalizeHist(img_h)
+                    #cv2.imwrite("teste/Teste" + str(i) + ".png", img)
+                    # Espelha a imagem horizontalmente
+                    #img_h = np.fliplr(img)
+                    # = img.rotate(180)
+                    #espelho = np.fliplr(img)
+                    #espelho = np.rot90(img, 2)
 
-            # Equaliza o histograma da imagem espelhada
-            #img_h_eq = self.equalizeHist(img)
+                    # Equaliza o histograma da imagem original
+                    #img_eq = self.equalizeHist(img_h)
 
-            # Adiciona as imagens ao conjunto de treino aumentado
-            #self.train_aumentada.extend([img, img_h, img_eq, img_h_eq])
-            
-            # Salva as imagens em um arquivo de teste
-            cv2.imwrite("AkiTeste/equalizadaEEspelhada" + str(i) + ".png", img_h)
-            #cv2.imwrite("AkiTeste/histrograma" + str(i) + ".png", img_h)
-            #cv2.imwrite("AkiTeste/equalizar" + str(i) + ".png", img_h_eq )
-            #cv2.imwrite("AkiTeste/espelhada" + str(i) + ".png", espelho)
-            print(i)
+                    # Equaliza o histograma da imagem espelhada
+                    #img_h_eq = self.equalizeHist(img)
+
+                    # Adiciona as imagens ao conjunto de treino aumentado
+                    #self.train_aumentada.extend([img, img_h, img_eq, img_h_eq])
+                    
+                    # Salva as imagens em um arquivo de teste
+                    #nome_arquivo = os.path.splitext(imagem)[0] 
+                    #cv2.imwrite("AkiTeste/" +nome_arquivo+"_NN_.png", img)
+                    #cv2.imwrite("AkiTeste/histrograma" + str(i) + ".png", img)
+                    #cv2.imwrite("AkiTeste/equalizar" + str(i) + ".png", img_h_eq )
+                    #cv2.imwrite("AkiTeste/espelhada" + str(i) + ".png", espelho)
+                    print(i)
 
 
 

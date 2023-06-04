@@ -3,16 +3,27 @@ import sys
 sys.path.append('App/Imports')
 
 from Imports import *
+from PIL import Image
 from App.Curso.Logo import Logo
 from App.Colaboradores.JanelaColaboradores import Janela
 from App.JanelaCinza.JanelaSeg import SubWindow
 from App.PreparativosRede.PreProcessamentoImagens.LerDiretoriosIMg import LeituraDiretorio
 from App.PreparativosRede.PreProcessamentoImagens.AumentandoDados import AumentarDados
+from App.Mascaras.Binarização.binaria import binaria
+from App.Mascaras.Fourier.fourier import fourier
+from App.Mascaras.Fourier.passaBaixa import passaBaixa
+from App.Mascaras.Bordas.sobel import sobel
 import cv2
 from App.IA.MostrarTxt import MostrarTxt
 import numpy as np
+import os
+import shutil
+
 img = None
+intQual=0
 train = []
+l1=None
+l2=None
 test = []
 #janela Principal do programa onde sera realizado todo o programa em si
 class MainWindow(QMainWindow):
@@ -98,6 +109,198 @@ class MainWindow(QMainWindow):
 
         button_verificar.clicked.connect(self.on_botao_clicado)
         button_hist.clicked.connect(self.on_botao_hist_clicado)
+
+
+        
+    def adicionarWidgetsNaAbaFiltros(self):
+        # Encontra a aba "Filtros"
+        for i in range(self.ui.tabWidget.count()):
+            if self.ui.tabWidget.tabText(i) == "Filtros":
+                tab_imagem = self.ui.tabWidget.widget(i)
+                layout = QHBoxLayout(tab_imagem)
+
+                # Criação do QComboBox para as escolhas
+                comboBox = QComboBox()
+                comboBox.addItem("Esolha")
+                comboBox.addItem("Binnarização")
+                comboBox.addItem("Sobel")
+                comboBox.addItem("Fourier")
+                comboBox.addItem("Passa Baixa")
+                layout.addWidget(comboBox)
+
+                # Criação dos QLabels para as imagens e botões
+                layout1 = QVBoxLayout()
+                label1 = QLabel("Label 1")
+                button_verificar1 = QPushButton("Verificar")
+                button_verificar1.clicked.connect(lambda: self.mostrar_imagens(comboBox, label1))
+                button_verificar1.hide()  # O botão fica inicialmente oculto
+                button_hist1 = QPushButton("Hist")
+                button_hist1.hide()  # O botão fica inicialmente oculto
+                layout1.addWidget(label1)
+                layout1.addWidget(button_verificar1)
+                layout1.addWidget(button_hist1)
+
+                layout2 = QVBoxLayout()
+                label2 = QLabel("Label 2")
+                button_verificar2 = QPushButton("Verificar")
+                button_verificar2.clicked.connect(lambda: self.mostrar_imagens(comboBox, label2))
+                button_verificar2.hide()  # O botão fica inicialmente oculto
+                button_hist2 = QPushButton("Hist")
+                button_hist2.hide()  # O botão fica inicialmente oculto
+                layout2.addWidget(label2)
+                layout2.addWidget(button_verificar2)
+                layout2.addWidget(button_hist2)
+
+                layout.addLayout(layout1)
+                layout.addLayout(layout2)
+
+                # Conecta o sinal de mudança de index do comboBox ao slot que mostra os botões
+                comboBox.currentIndexChanged.connect(lambda: self.mostrar_botoes(comboBox, label1, label2, button_verificar1, button_hist1, button_verificar2, button_hist2))
+
+                tab_imagem.setLayout(layout)
+
+
+    
+    def mostrar_botoes(self, comboBox, label1, label2, button_verificar1, button_hist1, button_verificar2, button_hist2):
+        # Mostra os botões e as imagens correspondentes dependendo da escolha
+        global img
+        global l1, l2
+        global intQual
+
+        if comboBox.currentText() == "Binarização":
+            intQual = 1
+            # Adicione esta linha para criar um QLineEdit (caixa de texto)
+            self.textbox = QLineEdit(self)
+
+            # Adicione esta linha para criar um botão de envio
+            self.enviar_button = QPushButton('Enviar', self)
+            self.enviar_button.move(320, 20)  # Mova e dimensione o botão conforme necessário
+            self.enviar_button.resize(80, 40)
+
+            # Conecte o botão a uma função
+            self.enviar_button.clicked.connect(self.on_enviar_clicked)
+
+            # Mostrar o QLineEdit
+            l1 = label1
+            l2 = label2
+            self.textbox.move(20, 20)
+            self.textbox.resize(280, 40)
+            self.textbox.show()
+            self.enviar_button.show()  # Mostrar o botão de envio
+
+            # Defina um texto informativo
+            self.textbox.setPlaceholderText("Digite o valor aqui")
+
+        else:
+            # Esconder o QLineEdit e o botão de envio, se estiverem visíveis
+            if hasattr(self, 'textbox'):
+                self.textbox.hide()
+                self.textbox.deleteLater()
+                del self.textbox
+            if hasattr(self, 'enviar_button'):
+                self.enviar_button.hide()
+                self.enviar_button.deleteLater()
+                del self.enviar_button
+
+        if comboBox.currentText() == "Sobel":
+            ob = sobel(img)
+            rr = ob.sobel_edge_detection
+            self.mostrar_imagens("App/Raio-X/Sobel.png", img, label1, label2)
+            button_verificar1.hide()
+            button_hist1.hide()
+            button_verificar2.hide()
+            button_hist2.hide()
+
+        if comboBox.currentText() == "Fourier":
+            objeto_fourier = fourier(img)
+            resultado = objeto_fourier.fazerfori
+            self.mostrar_imagens("App/Raio-X/EspectroFourier.png", "App/Raio-X/ImgFourier.png", label1, label2)
+            button_verificar1.hide()
+            button_hist1.hide()
+            button_verificar2.hide()
+            button_hist2.hide()
+
+        if comboBox.currentText() == "Passa Baixa":
+            intQual = 2
+            # Adicione esta linha para criar um QLineEdit (caixa de texto)
+            self.textbox = QLineEdit(self)
+
+            # Adicione esta linha para criar um botão de envio
+            self.enviar_button = QPushButton('Enviar', self)
+            self.enviar_button.move(320, 20)  # Mova e dimensione o bot conforme necessário
+            self.enviar_button.resize(80, 40)
+
+            # Conecte o botão a uma função
+            self.enviar_button.clicked.connect(self.on_enviar_clicked)
+
+            # Mostrar o QLineEdit
+            l1 = label1
+            l2 = label2
+            self.textbox.move(20, 20)
+            self.textbox.resize(280, 40)
+            self.textbox.show()
+            self.enviar_button.show()  # Mostrar o botão de envio
+
+            # Defina um texto informativo
+            self.textbox.setPlaceholderText("Digite o valor aqui")
+
+        else:
+            # Esconder o QLineEdit e o botão de envio, se estiverem visíveis
+            if hasattr(self, 'textbox'):
+                self.textbox.hide()
+                self.textbox.deleteLater()
+                del self.textbox
+            if hasattr(self, 'enviar_button'):
+                self.enviar_button.hide()
+                self.enviar_button.deleteLater()
+                del self.enviar_button
+
+
+
+
+    # Função que será chamada quando o botão de envio for clicado
+    def on_enviar_clicked(self):
+        global l1, l2, intQual, img
+        print(intQual)
+        # Obtenha o valor do QLineEdit quando o botão é pressionado
+        if intQual==1:
+            valor = int(self.textbox.text())
+            binarizador = binaria(img, valor)  # Usar o valor na função binaria
+            self.mostrar_imagens("App/Raio-X/binary_image.png","App/Raio-X/R.png", l1, l2)
+        else:
+            valor = int(self.textbox.text())
+            objeto_fourier = passaBaixa(img,valor)
+            resultado = objeto_fourier.low_pass_filter
+            self.mostrar_imagens("App/Raio-X/PassaBaixa.png","App/Raio-X/R.png", l1, l2)
+        #button_verificar1.show()
+        #button_hist1.show()
+        #button_verificar2.show()
+        #button_hist2.show()
+
+
+    def mostrar_imagens(self, imagem1, imagem2, label1, label2):
+        # Carrega as imagens
+        pixmap1 = QPixmap(imagem1)
+        pixmap2 = QPixmap(imagem2)
+
+        # Redimensiona os pixmaps para caberem dentro do tamanho do QLabel, mantendo a proporção da imagem.
+        pixmap1 = pixmap1.scaled(self.ui.tabWidget.width() // 3, self.ui.tabWidget.height() // 1)
+        pixmap2 = pixmap2.scaled(self.ui.tabWidget.width() // 3, self.ui.tabWidget.height() // 1)
+
+        # Define o tamanho máximo para os labels e aplica os pixmaps
+        label1.setMaximumWidth(self.ui.tabWidget.width() // 3)
+        label1.setMaximumHeight(self.ui.tabWidget.height() // 1)
+        label1.setPixmap(pixmap1)
+        label1.setStyleSheet("border: none;")
+
+        label2.setMaximumWidth(self.ui.tabWidget.width() // 3)
+        label2.setMaximumHeight(self.ui.tabWidget.height() // 1)
+        label2.setPixmap(pixmap2)
+        label2.setStyleSheet("border: none;")
+
+        # Define o tamanho máximo para os botões
+        #button_verificar.setMaximumWidth(label1.maximumWidth())
+        #button_hist.setMaximumWidth(label1.maximumWidth())
 
 
         
@@ -188,7 +391,7 @@ class MainWindow(QMainWindow):
         if(self.ui.tabWidget.currentIndex()==0):
             self.mudarAbaImagem()
         elif(self.ui.tabWidget.currentIndex()==1):
-            print("Matrix")
+            self.adicionarWidgetsNaAbaFiltros()
         else:
             print("Resultado") 
 
@@ -206,6 +409,10 @@ class MainWindow(QMainWindow):
         logo = Logo(self)
         logo.show()
 
+    def escreverArquivo(self,train):
+        with open("nomeTest1.txt", 'w') as arquivo:
+            for item in train:
+                arquivo.write(str(item) + '\n')
 
     def Colaboradores(self):
         global train , test
@@ -215,10 +422,13 @@ class MainWindow(QMainWindow):
         train=ld.train
         test=ld.test
         print("1-------")
-        print(train[1])
-        AumentarDados(train)
+        self.escreverArquivo(test) 
+        #AumentarDados(train)
+        #print(test[1])
         print("fim")
-        
+
+
+    
 
     def File(self):
         global img
@@ -341,6 +551,10 @@ class MainWindow(QMainWindow):
             matricas_box.addButton("Classificação binaria", QMessageBox.YesRole)
             matricas_box.addButton("Classificação de 4 classes", QMessageBox.NoRole)
             matricas_box.exec_()
+    
+
+
+
 
 
 

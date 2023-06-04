@@ -133,7 +133,7 @@ class Ui_MainWindow(object):
         self.pontos.clicked.connect(MainWindow.Pontos)
         self.IA.clicked.connect(MainWindow.IaMostrar)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -149,7 +149,7 @@ class Ui_MainWindow(object):
         self.Imagem.setAccessibleName("")
 #endif // QT_CONFIG(accessibility)
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Imagem), QCoreApplication.translate("MainWindow", u"IMG", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QCoreApplication.translate("MainWindow", u"Matriz", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QCoreApplication.translate("MainWindow", u"Filtros", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"RESPOSTA", None))
         self.label.setText("")
         self.Colaboradores.setText("")

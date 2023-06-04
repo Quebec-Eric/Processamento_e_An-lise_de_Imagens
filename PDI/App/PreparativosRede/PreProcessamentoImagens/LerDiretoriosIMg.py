@@ -28,7 +28,7 @@ class LeituraDiretorio:
                     class_letter = class_map.get(class_num)
 
                     if class_letter:
-                        filename = f"{breast}_{view} ({class_num}).png"
+                        filename = f"{file}"
                         if class_num == 0:
                             self.test.append(os.path.join(subdir, filename))
                         else:
