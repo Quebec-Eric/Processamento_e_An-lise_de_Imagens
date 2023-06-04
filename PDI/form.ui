@@ -148,7 +148,7 @@ border-width: 2px;
 border-radius: 20px;</string>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <property name="documentMode">
      <bool>false</bool>
@@ -166,7 +166,7 @@ border-radius: 20px;</string>
     </widget>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">
-      <string>Matriz</string>
+      <string>Filtros</string>
      </attribute>
     </widget>
     <widget class="QWidget" name="tab_2">

@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
         "./App"
-    ]
+    ],
+    "python.analysis.typeCheckingMode": "basic"
 }
