@@ -13,6 +13,7 @@ from App.Mascaras.Binarização.binaria import binaria
 from App.Mascaras.Fourier.fourier import fourier
 from App.Mascaras.Fourier.passaBaixa import passaBaixa
 from App.Mascaras.Bordas.sobel import sobel
+from App.Mascaras.RemoverTexto.removerTexto import removerTexto
 import cv2
 from App.IA.MostrarTxt import MostrarTxt
 import numpy as np
@@ -126,6 +127,7 @@ class MainWindow(QMainWindow):
                 comboBox.addItem("Sobel")
                 comboBox.addItem("Fourier")
                 comboBox.addItem("Passa Baixa")
+                comboBox.addItem("Remover Texto")
                 layout.addWidget(comboBox)
 
                 # Criação dos QLabels para as imagens e botões
@@ -160,6 +162,32 @@ class MainWindow(QMainWindow):
                 tab_imagem.setLayout(layout)
 
 
+    def binarizaar(self):
+        global img
+        global l1, l2
+        global intQual
+        intQual = 1
+        # Adicione esta linha para criar um QLineEdit (caixa de texto)
+        self.textbox = QLineEdit(self)
+
+            # Adicione esta linha para criar um botão de envio
+        self.enviar_button = QPushButton('Enviar', self)
+        self.enviar_button.move(320, 20)  # Mova e dimensione o botão conforme necessário
+        self.enviar_button.resize(80, 40)
+
+            # Conecte o botão a uma função
+        self.enviar_button.clicked.connect(self.on_enviar_clicked)
+
+            # Mostrar o QLineEdit
+        l1 = label1
+        l2 = label2
+        self.textbox.move(20, 20)
+        self.textbox.resize(280, 40)
+        self.textbox.show()
+        self.enviar_button.show()  # Mostrar o botão de envio
+
+            # Defina um texto informativo
+        self.textbox.setPlaceholderText("Digite o valor aqui")
     
     def mostrar_botoes(self, comboBox, label1, label2, button_verificar1, button_hist1, button_verificar2, button_hist2):
         # Mostra os botões e as imagens correspondentes dependendo da escolha
@@ -167,20 +195,20 @@ class MainWindow(QMainWindow):
         global l1, l2
         global intQual
 
-        if comboBox.currentText() == "Binarização":
+        if comboBox.currentText() == "Binnarização":
             intQual = 1
             # Adicione esta linha para criar um QLineEdit (caixa de texto)
             self.textbox = QLineEdit(self)
 
-            # Adicione esta linha para criar um botão de envio
+                # Adicione esta linha para criar um botão de envio
             self.enviar_button = QPushButton('Enviar', self)
             self.enviar_button.move(320, 20)  # Mova e dimensione o botão conforme necessário
             self.enviar_button.resize(80, 40)
 
-            # Conecte o botão a uma função
+                # Conecte o botão a uma função
             self.enviar_button.clicked.connect(self.on_enviar_clicked)
 
-            # Mostrar o QLineEdit
+                # Mostrar o QLineEdit
             l1 = label1
             l2 = label2
             self.textbox.move(20, 20)
@@ -188,21 +216,7 @@ class MainWindow(QMainWindow):
             self.textbox.show()
             self.enviar_button.show()  # Mostrar o botão de envio
 
-            # Defina um texto informativo
-            self.textbox.setPlaceholderText("Digite o valor aqui")
-
-        else:
-            # Esconder o QLineEdit e o botão de envio, se estiverem visíveis
-            if hasattr(self, 'textbox'):
-                self.textbox.hide()
-                self.textbox.deleteLater()
-                del self.textbox
-            if hasattr(self, 'enviar_button'):
-                self.enviar_button.hide()
-                self.enviar_button.deleteLater()
-                del self.enviar_button
-
-        if comboBox.currentText() == "Sobel":
+        elif comboBox.currentText() == "Sobel":
             ob = sobel(img)
             rr = ob.sobel_edge_detection
             self.mostrar_imagens("App/Raio-X/Sobel.png", img, label1, label2)
@@ -211,38 +225,50 @@ class MainWindow(QMainWindow):
             button_verificar2.hide()
             button_hist2.hide()
 
-        if comboBox.currentText() == "Fourier":
-            objeto_fourier = fourier(img)
-            resultado = objeto_fourier.fazerfori
-            self.mostrar_imagens("App/Raio-X/EspectroFourier.png", "App/Raio-X/ImgFourier.png", label1, label2)
-            button_verificar1.hide()
-            button_hist1.hide()
-            button_verificar2.hide()
-            button_hist2.hide()
+        elif comboBox.currentText() == "Fourier":
+                objeto_fourier = fourier(img)
+                resultado = objeto_fourier.fazerfori
+                self.mostrar_imagens("App/Raio-X/EspectroFourier.png", "App/Raio-X/ImgFourier.png", label1, label2)
+                button_verificar1.hide()
+                button_hist1.hide()
+                button_verificar2.hide()
+                button_hist2.hide()
 
-        if comboBox.currentText() == "Passa Baixa":
-            intQual = 2
-            # Adicione esta linha para criar um QLineEdit (caixa de texto)
-            self.textbox = QLineEdit(self)
+        elif comboBox.currentText() == "Remover Texto":
+                objeto_fourier = fourier(img)
+                resultado = objeto_fourier.fazerfori
+                removTexto= removerTexto(img)
+                resultado=removTexto.fazerRemoção
+                self.mostrar_imagens("App/Raio-X/SemTexto.png", img, label1, label2)
+                button_verificar1.hide()
+                button_hist1.hide()
+                button_verificar2.hide()
+                button_hist2.hide()
 
-            # Adicione esta linha para criar um botão de envio
-            self.enviar_button = QPushButton('Enviar', self)
-            self.enviar_button.move(320, 20)  # Mova e dimensione o bot conforme necessário
-            self.enviar_button.resize(80, 40)
 
-            # Conecte o botão a uma função
-            self.enviar_button.clicked.connect(self.on_enviar_clicked)
+        elif comboBox.currentText() == "Passa Baixa":
+                intQual = 2
+                # Adicione esta linha para criar um QLineEdit (caixa de texto)
+                self.textbox = QLineEdit(self)
 
-            # Mostrar o QLineEdit
-            l1 = label1
-            l2 = label2
-            self.textbox.move(20, 20)
-            self.textbox.resize(280, 40)
-            self.textbox.show()
-            self.enviar_button.show()  # Mostrar o botão de envio
+                # Adicione esta linha para criar um botão de envio
+                self.enviar_button = QPushButton('Enviar', self)
+                self.enviar_button.move(320, 20)  # Mova e dimensione o bot conforme necessário
+                self.enviar_button.resize(80, 40)
 
-            # Defina um texto informativo
-            self.textbox.setPlaceholderText("Digite o valor aqui")
+                # Conecte o botão a uma função
+                self.enviar_button.clicked.connect(self.on_enviar_clicked)
+
+                # Mostrar o QLineEdit
+                l1 = label1
+                l2 = label2
+                self.textbox.move(20, 20)
+                self.textbox.resize(280, 40)
+                self.textbox.show()
+                self.enviar_button.show()  # Mostrar o botão de envio
+
+                # Defina um texto informativo
+                self.textbox.setPlaceholderText("Digite o valor aqui")
 
         else:
             # Esconder o QLineEdit e o botão de envio, se estiverem visíveis
