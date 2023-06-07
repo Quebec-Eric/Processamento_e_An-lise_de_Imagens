@@ -5,6 +5,10 @@ sys.path.append('App/Imports')
 from Imports import *
 from PIL import Image
 import random
+import os
+from tensorflow.keras.applications.resnet_v2 import preprocess_input
+import tensorflow as tf
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 from App.Curso.Logo import Logo
 from App.Colaboradores.JanelaColaboradores import Janela
 from App.JanelaCinza.JanelaSeg import SubWindow
@@ -19,6 +23,7 @@ import cv2
 from App.IA.MostrarTxt import MostrarTxt
 import numpy as np
 import os
+from tensorflow.keras.models import load_model
 import shutil
 
 #variaveis globais que serao utiizadas em todo codigo
@@ -28,7 +33,7 @@ train = []
 l1=None
 l2=None
 test = []
-
+intQualPredicao=0
 #janela Principal do programa onde sera realizado todo o programa em si
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -188,7 +193,33 @@ class MainWindow(QMainWindow):
         self.textbox.setPlaceholderText("Digite o valor aqui")
         return
 
-     #funcao para receber o sinal de qual opcao foi escolhida       
+    def fazerSobel(self):
+        global img
+        ob = sobel(img)
+        rr = ob.sobel_edge_detection
+        return
+    
+    def fazerPassaBaixa(self):
+        global img
+        objeto_fourier = passaBaixa(img,20)
+        resultado = objeto_fourier.low_pass_filter
+        return
+
+    def fazerEqualizacao(self, img):
+        img = cv2.imread(img, 0)
+        equalized_img = cv2.equalizeHist(img)
+        cv2.imwrite('App/Raio-X/Equalizada.png', equalized_img)
+        return       
+
+    def fazerEspelho(self, img):
+        img = cv2.imread(img)
+        rotated_img =np.rot90(img, 2)
+        cv2.imwrite('App/Raio-X/Espelho.png', rotated_img)
+        return
+
+    
+
+
     def mostrar_botoes(self, comboBox, label1, label2, button_verificar1, button_hist1, button_verificar2, button_hist2):
         
         global img
@@ -376,19 +407,26 @@ class MainWindow(QMainWindow):
                 child.deleteLater()
 
     def button1_clicked(self):
+        global img
+        global intQualPredicao
+        intQualPredicao =4
         self.clearLayout(self.tab2Layout)
 
-        # Cria um layout horizontal para posicionar a label e as barras de progresso
-        hbox_layout = QHBoxLayout()
+        # Cria um layout horizontal para a estrutura principal
+        hbox_main_layout = QHBoxLayout()
 
         # Adiciona a QLabel com a imagem R.png à esquerda
         label = QLabel(self)
-        pixmap = QPixmap('App/Raio-X/R.png')
-        label.setPixmap(pixmap.scaled(300, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        hbox_layout.addWidget(label)
+        pixmap = QPixmap(img)
+        # ajuste o tamanho do pixmap para corresponder à altura da janela
+        pixmap = pixmap.scaled(pixmap.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        label.setPixmap(pixmap)
+        label.setScaledContents(True) # Esta linha garante que a imagem se ajuste ao tamanho do QLabel
+        # Adiciona a QLabel ao layout principal
+        hbox_main_layout.addWidget(label, 1)
 
-        # Cria um layout vertical para posicionar as opções de marcar
-        vbox1_layout = QVBoxLayout()
+        # Cria um layout vertical para os botões de filtro e outras opções
+        vbox_layout = QVBoxLayout()
 
         # Adiciona as opções de filtro
         self.filters = []
@@ -396,112 +434,168 @@ class MainWindow(QMainWindow):
         filter_checkbox1 = QCheckBox("Passa Baixa")
         filter_checkbox2 = QCheckBox("Equalizacao")
         filter_checkbox3 = QCheckBox("Espelho")
-        vbox1_layout.addWidget(filter_checkbox)
-        vbox1_layout.addWidget(filter_checkbox1)
-        vbox1_layout.addWidget(filter_checkbox2)
-        vbox1_layout.addWidget(filter_checkbox3)
+        vbox_layout.addWidget(filter_checkbox)
+        vbox_layout.addWidget(filter_checkbox1)
+        vbox_layout.addWidget(filter_checkbox2)
+        vbox_layout.addWidget(filter_checkbox3)
         self.filters.append(filter_checkbox)
         self.filters.append(filter_checkbox1)
         self.filters.append(filter_checkbox2)
         self.filters.append(filter_checkbox3)
 
-        # Adiciona o layout vertical de opções de marcar ao layout horizontal
-        hbox_layout.addLayout(vbox1_layout)
-
-        # Cria um layout vertical para posicionar as outras duas opções
-        vbox2_layout = QVBoxLayout()
-
         # Adiciona a seleção de opções
         self.option1 = QRadioButton("Sem Texto")
         self.option2 = QRadioButton("Com Texto")
-        vbox2_layout.addWidget(self.option1)
-        vbox2_layout.addWidget(self.option2)
-
-        # Adiciona o layout vertical de outras duas opções ao layout horizontal
-        hbox_layout.addLayout(vbox2_layout)
-
-        # Adiciona o layout horizontal ao layout principal da terceira aba
-        self.tab2Layout.addLayout(hbox_layout)
+        vbox_layout.addWidget(self.option1)
+        vbox_layout.addWidget(self.option2)
 
         # Adiciona o botão para enviar as seleções
         send_button = QPushButton("Predicao")
+        send_button.setFixedSize(100, 30)
         send_button.clicked.connect(self.send_selections)
-        self.tab2Layout.addWidget(send_button)
+        vbox_layout.addWidget(send_button, alignment=Qt.AlignBottom)
 
-        # Adiciona as barras de progresso à direita
+        # Adiciona as barras de progresso
         self.progress_bars = []
+        roman_numerals = ["I", "II", "III", "IV"] # Números romanos
         for i in range(4):
+            roman_label = QLabel(roman_numerals[i]) # QLabel para o número romano
+            vbox_layout.addWidget(roman_label, alignment=Qt.AlignLeft) # Adiciona o QLabel ao layout vertical
             progress_bar = QProgressBar(self)
-            self.tab2Layout.addWidget(progress_bar)
-        self.progress_bars.append(progress_bar)
+            progress_bar.setFixedSize(500, 40)
+            vbox_layout.addWidget(progress_bar) # Adiciona a barra de progresso ao layout vertical
+            self.progress_bars.append(progress_bar)
+
+        # Adiciona o layout vertical ao layout horizontal principal
+        hbox_main_layout.addLayout(vbox_layout, 1)
+
+        # Adiciona o layout horizontal ao layout principal da terceira aba
+        self.tab2Layout.addLayout(hbox_main_layout)
+
+
+
+
+
+
+
+        
 
     def button2_clicked(self):
+        global img
         self.clearLayout(self.tab2Layout)
 
-        # Cria um layout horizontal para posicionar a label e as barras de progresso
-        hbox_layout = QHBoxLayout()
+        # Cria um layout horizontal para a estrutura principal
+        hbox_main_layout = QHBoxLayout()
 
         # Adiciona a QLabel com a imagem R.png à esquerda
         label = QLabel(self)
-        pixmap = QPixmap('App/Raio-X/R.png')
-        label.setPixmap(pixmap.scaled(300, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        hbox_layout.addWidget(label)
+        pixmap = QPixmap(img)
+        # ajuste o tamanho do pixmap para corresponder à altura da janela
+        pixmap = pixmap.scaled(pixmap.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        label.setPixmap(pixmap)
+        label.setScaledContents(True) # Esta linha garante que a imagem se ajuste ao tamanho do QLabel
+        # Adiciona a QLabel ao layout principal
+        hbox_main_layout.addWidget(label, 1) # O '1' aqui adiciona um stretch para ocupar todo o espaço vertical à esquerda
 
-        # Cria um layout vertical para posicionar as opções de marcar
-        vbox1_layout = QVBoxLayout()
+        # Cria um layout vertical para os botões de filtro e outras opções
+        vbox_layout = QVBoxLayout()
 
         # Adiciona as opções de filtro
         self.filters = []
         filter_checkbox = QCheckBox("Sobel")
         filter_checkbox1 = QCheckBox("Passa Baixa")
-        filter_checkbox2 = QCheckBox("Binarizacao")
-        filter_checkbox3 = QCheckBox("Cannny")
-        vbox1_layout.addWidget(filter_checkbox)
-        vbox1_layout.addWidget(filter_checkbox1)
-        vbox1_layout.addWidget(filter_checkbox2)
-        vbox1_layout.addWidget(filter_checkbox3)
+        filter_checkbox2 = QCheckBox("Equalizacao")
+        filter_checkbox3 = QCheckBox("Espelho")
+        vbox_layout.addWidget(filter_checkbox)
+        vbox_layout.addWidget(filter_checkbox1)
+        vbox_layout.addWidget(filter_checkbox2)
+        vbox_layout.addWidget(filter_checkbox3)
         self.filters.append(filter_checkbox)
         self.filters.append(filter_checkbox1)
         self.filters.append(filter_checkbox2)
         self.filters.append(filter_checkbox3)
 
-        # Adiciona o layout vertical de opções de marcar ao layout horizontal
-        hbox_layout.addLayout(vbox1_layout)
-
-        # Cria um layout vertical para posicionar as outras duas opções
-        vbox2_layout = QVBoxLayout()
-
         # Adiciona a seleção de opções
         self.option1 = QRadioButton("Sem Texto")
         self.option2 = QRadioButton("Com Texto")
-        vbox2_layout.addWidget(self.option1)
-        vbox2_layout.addWidget(self.option2)
-
-        # Adiciona o layout vertical de outras duas opções ao layout horizontal
-        hbox_layout.addLayout(vbox2_layout)
-
-        # Adiciona o layout horizontal ao layout principal da terceira aba
-        self.tab2Layout.addLayout(hbox_layout)
+        vbox_layout.addWidget(self.option1)
+        vbox_layout.addWidget(self.option2)
 
         # Adiciona o botão para enviar as seleções
         send_button = QPushButton("Predicao")
+        send_button.setFixedSize(100, 30)
         send_button.clicked.connect(self.send_selections)
-        self.tab2Layout.addWidget(send_button)
+        vbox_layout.addWidget(send_button, alignment=Qt.AlignBottom)
 
-        # Adiciona as barras de progresso à direita
+        # Adiciona as barras de progresso
         self.progress_bars = []
         for i in range(2):
             progress_bar = QProgressBar(self)
-            self.tab2Layout.addWidget(progress_bar)
+            progress_bar.setFixedSize(500, 40)
+            vbox_layout.addWidget(progress_bar)
             self.progress_bars.append(progress_bar)
+
+        # Adiciona o layout vertical ao layout horizontal principal
+        hbox_main_layout.addLayout(vbox_layout, 1) # O '1' aqui adiciona um stretch para ocupar o espaço restante à direita
+
+        # Adiciona o layout horizontal ao layout principal da terceira aba
+        self.tab2Layout.addLayout(hbox_main_layout)
+    
+
+
+    def fazer4classes(self, filtros, texto):
+        # Cria o dicionário de operações
+        global img
+        operations = {
+            "Sobel": [self.fazerSobel(), "App/Raio-X/Sobel.png"],
+            "Passa Baixa": [self.fazerPassaBaixa(), "App/Raio-X/PassaBaixa.png"],
+            "Equalizacao": [self.fazerEqualizacao(img), "App/Raio-X/Equalizada.png"],
+            "Espelho": [self.fazerEspelho(img), "App/Raio-X/Espelho.png"],
+        }
+
+        
+
+        if texto == "Sem Texto":
+            # Carrega o modelo
+            print("aki inico")
+            model = load_model('App/IA/my_model_4.h5')
+
+            # Lista para armazenar as predições
+            predictions = []
+
+            #for filter_checkbox in filtros:
+                #if filter_checkbox.isChecked():
+                    # Chama a função de filtro correspondente
+                    #operations[filter_checkbox.text()][0]()
+
             
+            image = cv2.imread("App/Raio-X/PassaBaixa.png",0)
+            image = self.prepare_image_for_model(image)
+            prediction = model.predict(image)
+            predictions.append(prediction)     
+
+            print(predictions)
+            print("aki")
+
+
+    def prepare_image_for_model(self,image, target_size=(224, 224)):
+        # Redimensiona a imagem para o tamanho-alvo
+        image = cv2.resize(image, target_size)
+        
+        # Normaliza os pixels para o intervalo [0, 1]
+        image = image.astype('float32') / 255.0
+        
+        # Adiciona uma dimensão de lote
+        image = np.expand_dims(image, axis=0)
+        
+        return image
 
     def send_selections(self):
+        global intQualPredicao
         selected_filters = [filter.text() for filter in self.filters if filter.isChecked()]
         selected_option = self.option1.text() if self.option1.isChecked() else self.option2.text() if self.option2.isChecked() else None
-        if selected_option=="Sem Texto":
-            predicao=self.fazerPredicaoBinariaSemTexto(selected_filters)
-        # Gerar porcentagens aleatórias para as barras de progresso
+        if intQualPredicao ==4:
+            self.fazer4classes(selected_filters,selected_option)
         percentages = [random.randint(0, 100) for _ in self.progress_bars]
         
         self.update_progress_bars(percentages)
