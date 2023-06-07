@@ -394,8 +394,8 @@ class MainWindow(QMainWindow):
         self.filters = []
         filter_checkbox = QCheckBox("Sobel")
         filter_checkbox1 = QCheckBox("Passa Baixa")
-        filter_checkbox2 = QCheckBox("Binarizacao")
-        filter_checkbox3 = QCheckBox("Cannny")
+        filter_checkbox2 = QCheckBox("Equalizacao")
+        filter_checkbox3 = QCheckBox("Espelho")
         vbox1_layout.addWidget(filter_checkbox)
         vbox1_layout.addWidget(filter_checkbox1)
         vbox1_layout.addWidget(filter_checkbox2)
@@ -499,7 +499,8 @@ class MainWindow(QMainWindow):
     def send_selections(self):
         selected_filters = [filter.text() for filter in self.filters if filter.isChecked()]
         selected_option = self.option1.text() if self.option1.isChecked() else self.option2.text() if self.option2.isChecked() else None
-        
+        if selected_option=="Sem Texto":
+            predicao=self.fazerPredicaoBinariaSemTexto(selected_filters)
         # Gerar porcentagens aleatórias para as barras de progresso
         percentages = [random.randint(0, 100) for _ in self.progress_bars]
         
