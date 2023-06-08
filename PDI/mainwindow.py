@@ -6,6 +6,8 @@ from Imports import *
 from PIL import Image
 import random
 import os
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image
 from tensorflow.keras.applications.resnet_v2 import preprocess_input
 import tensorflow as tf
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -17,6 +19,10 @@ from App.PreparativosRede.PreProcessamentoImagens.AumentandoDados import Aumenta
 from App.Mascaras.Binarização.binaria import binaria
 from App.Mascaras.Fourier.fourier import fourier
 from App.Mascaras.Fourier.passaBaixa import passaBaixa
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import Image, SimpleDocTemplate, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
 from App.Mascaras.Bordas.sobel import sobel
 from App.Mascaras.RemoverTexto.removerTexto import removerTexto
 import cv2
@@ -25,14 +31,27 @@ import numpy as np
 import os
 from tensorflow.keras.models import load_model
 import shutil
+from tensorflow.keras.models import load_model
+import numpy as np
+import tensorflow as tf
+from PIL import Image
+import os
+from tensorflow.keras.applications.resnet_v2 import preprocess_input
+from tensorflow.keras.preprocessing import image
 
 #variaveis globais que serao utiizadas em todo codigo
 img = None
 intQual=0
 train = []
+porcentagemE=[]
+classeEscolhida=0
 l1=None
 l2=None
 test = []
+fezerSobel=0
+fezerBinarizacao=0
+fazerForiier=0
+fazerpassaBaixa=0
 intQualPredicao=0
 #janela Principal do programa onde sera realizado todo o programa em si
 class MainWindow(QMainWindow):
@@ -128,12 +147,15 @@ class MainWindow(QMainWindow):
     def adicionarWidgetsNaAbaFiltros(self):
         # Encontra a aba "Filtros"
         for i in range(self.ui.tabWidget.count()):
-            if self.ui.tabWidget.tabText(i) == "Filtros":
+            if self.ui.tabWidget.tabText(i) == "FILTROS":
                 tab_imagem = self.ui.tabWidget.widget(i)
                 layout = QHBoxLayout(tab_imagem)
 
                 # criar o QComboBox para as escolhas
                 comboBox = QComboBox()
+                comboBox.setStyleSheet("background-color: rgb(151, 157, 172); color: black;")  # Texto preto
+
+
                 comboBox.addItem("Esolha")
                 comboBox.addItem("Binnarização")
                 comboBox.addItem("Sobel")
@@ -144,7 +166,7 @@ class MainWindow(QMainWindow):
 
                 # criar os QLabels para as imagens 
                 layout1 = QVBoxLayout()
-                label1 = QLabel("Label 1")
+                label1 = QLabel("")
                 button_verificar1 = QPushButton("Verificar")
                 button_verificar1.clicked.connect(lambda: self.mostrar_imagens(comboBox, label1))
                 button_verificar1.hide()  
@@ -155,7 +177,7 @@ class MainWindow(QMainWindow):
                 layout1.addWidget(button_hist1)
 
                 layout2 = QVBoxLayout()
-                label2 = QLabel("Label 2")
+                label2 = QLabel("")
                 button_verificar2 = QPushButton("Verificar")
                 button_verificar2.clicked.connect(lambda: self.mostrar_imagens(comboBox, label2))
                 button_verificar2.hide()  
@@ -225,9 +247,14 @@ class MainWindow(QMainWindow):
         global img
         global l1, l2
         global intQual
+        global fezerSobel
+        global fezerBinarizacao
+        global fazerForiier
+        global fazerpassaBaixa
 
         if comboBox.currentText() == "Binnarização":
             intQual = 1
+            fezerBinarizacao =1
             self.textbox = QLineEdit(self)
             self.enviar_button = QPushButton('Enviar', self)
             self.enviar_button.move(320, 20) 
@@ -241,6 +268,7 @@ class MainWindow(QMainWindow):
             self.enviar_button.show() 
 
         elif comboBox.currentText() == "Sobel":
+            fezerSobel=1
             ob = sobel(img)
             rr = ob.sobel_edge_detection
             self.mostrar_imagens("App/Raio-X/Sobel.png", img, label1, label2)
@@ -250,6 +278,7 @@ class MainWindow(QMainWindow):
             button_hist2.hide()
 
         elif comboBox.currentText() == "Fourier":
+                fazerForiier =1
                 objeto_fourier = fourier(img)
                 resultado = objeto_fourier.fazerfori
                 self.mostrar_imagens("App/Raio-X/EspectroFourier.png", "App/Raio-X/ImgFourier.png", label1, label2)
@@ -259,8 +288,7 @@ class MainWindow(QMainWindow):
                 button_hist2.hide()
 
         elif comboBox.currentText() == "Remover Texto":
-                objeto_fourier = fourier(img)
-                resultado = objeto_fourier.fazerfori
+                
                 removTexto= removerTexto(img)
                 resultado=removTexto.fazerRemoção
                 self.mostrar_imagens("App/Raio-X/SemTexto.png", img, label1, label2)
@@ -272,6 +300,7 @@ class MainWindow(QMainWindow):
 
         elif comboBox.currentText() == "Passa Baixa":
                 intQual = 2
+                fazerpassaBaixa =1
                 self.textbox = QLineEdit(self)
                 self.enviar_button = QPushButton('Enviar', self)
                 self.enviar_button.move(320, 20)  
@@ -412,13 +441,13 @@ class MainWindow(QMainWindow):
         intQualPredicao =4
         self.clearLayout(self.tab2Layout)
 
-        # Cria um layout horizontal para a estrutura principal
         hbox_main_layout = QHBoxLayout()
+        removTexto= removerTexto(img)
+        resultado=removTexto.fazerRemoção
 
         # Adiciona a QLabel com a imagem R.png à esquerda
         label = QLabel(self)
-        pixmap = QPixmap(img)
-        # ajuste o tamanho do pixmap para corresponder à altura da janela
+        pixmap = QPixmap("App/Raio-X/SemTexto.png")
         pixmap = pixmap.scaled(pixmap.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
         label.setPixmap(pixmap)
         label.setScaledContents(True) # Esta linha garante que a imagem se ajuste ao tamanho do QLabel
@@ -428,12 +457,15 @@ class MainWindow(QMainWindow):
         # Cria um layout vertical para os botões de filtro e outras opções
         vbox_layout = QVBoxLayout()
 
-        # Adiciona as opções de filtro
         self.filters = []
         filter_checkbox = QCheckBox("Sobel")
+        filter_checkbox.setStyleSheet("QCheckBox { color: black; } QCheckBox::indicator:checked { color: black; }")
         filter_checkbox1 = QCheckBox("Passa Baixa")
+        filter_checkbox1.setStyleSheet("QCheckBox { color: black; } QCheckBox::indicator:checked { color: black; }")
         filter_checkbox2 = QCheckBox("Equalizacao")
+        filter_checkbox2.setStyleSheet("QCheckBox { color: black; } QCheckBox::indicator:checked { color: black; }")
         filter_checkbox3 = QCheckBox("Espelho")
+        filter_checkbox3.setStyleSheet("QCheckBox { color: black; } QCheckBox::indicator:checked { color: black; }")
         vbox_layout.addWidget(filter_checkbox)
         vbox_layout.addWidget(filter_checkbox1)
         vbox_layout.addWidget(filter_checkbox2)
@@ -445,12 +477,15 @@ class MainWindow(QMainWindow):
 
         # Adiciona a seleção de opções
         self.option1 = QRadioButton("Sem Texto")
+        self.option1.setStyleSheet("QRadioButton { color: black; } QRadioButton::indicator:checked { color: black; }")
         self.option2 = QRadioButton("Com Texto")
+        self.option2.setStyleSheet("QRadioButton { color: black; } QRadioButton::indicator:checked { color: black; }")
         vbox_layout.addWidget(self.option1)
         vbox_layout.addWidget(self.option2)
 
         # Adiciona o botão para enviar as seleções
         send_button = QPushButton("Predicao")
+        send_button.setStyleSheet("QPushButton { color: black; }")
         send_button.setFixedSize(100, 30)
         send_button.clicked.connect(self.send_selections)
         vbox_layout.addWidget(send_button, alignment=Qt.AlignBottom)
@@ -482,30 +517,37 @@ class MainWindow(QMainWindow):
 
     def button2_clicked(self):
         global img
+        global intQualPredicao
+        intQualPredicao =2
         self.clearLayout(self.tab2Layout)
 
         # Cria um layout horizontal para a estrutura principal
         hbox_main_layout = QHBoxLayout()
+        removTexto= removerTexto(img)
+        resultado=removTexto.fazerRemoção
 
         # Adiciona a QLabel com a imagem R.png à esquerda
         label = QLabel(self)
-        pixmap = QPixmap(img)
+        pixmap = QPixmap("App/Raio-X/SemTexto.png")
         # ajuste o tamanho do pixmap para corresponder à altura da janela
         pixmap = pixmap.scaled(pixmap.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
         label.setPixmap(pixmap)
         label.setScaledContents(True) # Esta linha garante que a imagem se ajuste ao tamanho do QLabel
         # Adiciona a QLabel ao layout principal
-        hbox_main_layout.addWidget(label, 1) # O '1' aqui adiciona um stretch para ocupar todo o espaço vertical à esquerda
+        hbox_main_layout.addWidget(label, 1)
 
         # Cria um layout vertical para os botões de filtro e outras opções
         vbox_layout = QVBoxLayout()
 
-        # Adiciona as opções de filtro
         self.filters = []
         filter_checkbox = QCheckBox("Sobel")
+        filter_checkbox.setStyleSheet("QCheckBox { color: black; } QCheckBox::indicator:checked { color: black; }")
         filter_checkbox1 = QCheckBox("Passa Baixa")
+        filter_checkbox1.setStyleSheet("QCheckBox { color: black; } QCheckBox::indicator:checked { color: black; }")
         filter_checkbox2 = QCheckBox("Equalizacao")
+        filter_checkbox2.setStyleSheet("QCheckBox { color: black; } QCheckBox::indicator:checked { color: black; }")
         filter_checkbox3 = QCheckBox("Espelho")
+        filter_checkbox3.setStyleSheet("QCheckBox { color: black; } QCheckBox::indicator:checked { color: black; }")
         vbox_layout.addWidget(filter_checkbox)
         vbox_layout.addWidget(filter_checkbox1)
         vbox_layout.addWidget(filter_checkbox2)
@@ -517,29 +559,40 @@ class MainWindow(QMainWindow):
 
         # Adiciona a seleção de opções
         self.option1 = QRadioButton("Sem Texto")
+        self.option1.setStyleSheet("QRadioButton { color: black; } QRadioButton::indicator:checked { color: black; }")
         self.option2 = QRadioButton("Com Texto")
+        self.option2.setStyleSheet("QRadioButton { color: black; } QRadioButton::indicator:checked { color: black; }")
         vbox_layout.addWidget(self.option1)
         vbox_layout.addWidget(self.option2)
 
         # Adiciona o botão para enviar as seleções
         send_button = QPushButton("Predicao")
+        send_button.setStyleSheet("QPushButton { color: black; }")
         send_button.setFixedSize(100, 30)
         send_button.clicked.connect(self.send_selections)
         vbox_layout.addWidget(send_button, alignment=Qt.AlignBottom)
 
         # Adiciona as barras de progresso
         self.progress_bars = []
+        roman_numerals = ["  I + II", "III + IV"] # Números romanos
         for i in range(2):
+            font = QFont()
+            font.setPointSize(15)  
+            roman_label = QLabel(roman_numerals[i]) # QLabel para o número romano
+            roman_label.setFont(font)
+            roman_label.setFixedSize(70, 50) 
+            vbox_layout.addWidget(roman_label, alignment=Qt.AlignLeft) # Adiciona o QLabel ao layout vertical
             progress_bar = QProgressBar(self)
             progress_bar.setFixedSize(500, 40)
-            vbox_layout.addWidget(progress_bar)
+            vbox_layout.addWidget(progress_bar) # Adiciona a barra de progresso ao layout vertical
             self.progress_bars.append(progress_bar)
 
         # Adiciona o layout vertical ao layout horizontal principal
-        hbox_main_layout.addLayout(vbox_layout, 1) # O '1' aqui adiciona um stretch para ocupar o espaço restante à direita
+        hbox_main_layout.addLayout(vbox_layout, 1)
 
         # Adiciona o layout horizontal ao layout principal da terceira aba
         self.tab2Layout.addLayout(hbox_main_layout)
+
     
 
 
@@ -553,29 +606,149 @@ class MainWindow(QMainWindow):
             "Espelho": [self.fazerEspelho(img), "App/Raio-X/Espelho.png"],
         }
 
-        
+
 
         if texto == "Sem Texto":
-            # Carrega o modelo
-            print("aki inico")
-            model = load_model('App/IA/my_model_4.h5')
+            print("ak")
+            model = tf.keras.models.load_model('App/IA/my_model_4SemTexto.h5')
 
-            # Lista para armazenar as predições
-            predictions = []
+            # Carregar e pré-processar a imagem de entrada
+            img_path = img
+            img = image.load_img(img_path, target_size=(224, 224))
+            x = image.img_to_array(img)
+            x = np.expand_dims(x, axis=0)
+            x = preprocess_input(x)
 
-            #for filter_checkbox in filtros:
-                #if filter_checkbox.isChecked():
-                    # Chama a função de filtro correspondente
-                    #operations[filter_checkbox.text()][0]()
+            # Fazer a classificação da imagem
+            predictions = model.predict(x)
 
+            # Definir a ordem das classes
+            classes = ["d", "e", "f", "g"]
+
+            # Obter a classe prevista
+            indice_previsto = np.argmax(predictions)
+            classe_prevista = classes[indice_previsto]
+            print('Classe prevista:', classe_prevista)
+
+            # Printar as probabilidades de cada classe
+            print("Probabilidades:")
+            for i, classe in enumerate(classes):
+                print(f"{classe}: {predictions[0][i]*100:.2f}%")
+
+            # Retornar a classe prevista e as probabilidades
+            return classe_prevista, {classe: predictions[0][i]*100 for i, classe in enumerate(classes)}
+        elif texto =="Com Texto":
+            model = tf.keras.models.load_model('App/IA/my_model_4.h5')
+
+            # Carregar e pré-processar a imagem de entrada
+            img_path = img
+            img = image.load_img(img_path, target_size=(224, 224))
+            x = image.img_to_array(img)
+            x = np.expand_dims(x, axis=0)
+            x = preprocess_input(x)
+
+            # Fazer a classificação da imagem
+            predictions = model.predict(x)
+
+            # Definir a ordem das classes
+            classes = ["d", "e", "f", "g"]
+
+            # Obter a classe prevista
+            indice_previsto = np.argmax(predictions)
+            classe_prevista = classes[indice_previsto]
+            print('Classe prevista:', classe_prevista)
+
+            # Printar as probabilidades de cada classe
+            print("Probabilidades:")
+            for i, classe in enumerate(classes):
+                print(f"{classe}: {predictions[0][i]*100:.2f}%")
+
+            # Retornar a classe prevista e as probabilidades
+            return classe_prevista, {classe: predictions[0][i]*100 for i, classe in enumerate(classes)}
+
+        else:
+            return None, {}
+
+    def fazer2classes(self, filtros, texto):
+        # Cria o dicionário de operações
+        global img
+        operations = {
+            "Sobel": [self.fazerSobel(), "App/Raio-X/Sobel.png"],
+            "Passa Baixa": [self.fazerPassaBaixa(), "App/Raio-X/PassaBaixa.png"],
+            "Equalizacao": [self.fazerEqualizacao(img), "App/Raio-X/Equalizada.png"],
+            "Espelho": [self.fazerEspelho(img), "App/Raio-X/Espelho.png"],
+        }
+
+
+
+        if texto == "Sem Texto":
+            print("ak")
+            model = tf.keras.models.load_model('App/IA/my_model_binarySemTexto.h5')
+
+            # Carregar e pré-processar a imagem de entrada
+            img_path = img
+            img = image.load_img(img_path, target_size=(224, 224))
+            x = image.img_to_array(img)
+            x = np.expand_dims(x, axis=0)
+            x = preprocess_input(x)
+
+            predictions = model.predict(x)
+            print("Previsões:", predictions)
             
-            image = cv2.imread("App/Raio-X/PassaBaixa.png",0)
-            image = self.prepare_image_for_model(image)
-            prediction = model.predict(image)
-            predictions.append(prediction)     
+            # Definir a ordem das classes
+            classes = ["d e", "f g"]
+            
+            # Obter a probabilidade da classe 1
+            prob_classe1 = predictions[0][0]
 
-            print(predictions)
-            print("aki")
+            # Probabilidade da classe 0
+            prob_classe0 = 1 - prob_classe1
+
+            # Obter a classe prevista
+            classe_prevista = classes[0] if prob_classe0 > prob_classe1 else classes[1]
+
+            print('Classe prevista:', classe_prevista)
+            print("Probabilidades:")
+            print(f"d e: {prob_classe0*100:.2f}%")
+            print(f"f g: {prob_classe1*100:.2f}%")
+
+        # Retornar a classe prevista e as probabilidades
+            return classe_prevista, {classes[0]: prob_classe0*100, classes[1]: prob_classe1*100}
+        elif texto =="Com Texto":
+            model = tf.keras.models.load_model('App/IA/my_model_binary.h5')
+
+            # Carregar e pré-processar a imagem de entrada
+            img_path = img
+            img = image.load_img(img_path, target_size=(224, 224))
+            x = image.img_to_array(img)
+            x = np.expand_dims(x, axis=0)
+            x = preprocess_input(x)
+
+            predictions = model.predict(x)
+            print("Previsões:", predictions)
+            
+            # Definir a ordem das classes
+            classes = ["d e", "f g"]
+            
+            # Obter a probabilidade da classe 1
+            prob_classe1 = predictions[0][0]
+
+            # Probabilidade da classe 0
+            prob_classe0 = 1 - prob_classe1
+
+            # Obter a classe prevista
+            classe_prevista = classes[0] if prob_classe0 > prob_classe1 else classes[1]
+
+            print('Classe prevista:', classe_prevista)
+            print("Probabilidades:")
+            print(f"d e: {prob_classe0*100:.2f}%")
+            print(f"f g: {prob_classe1*100:.2f}%")
+
+        # Retornar a classe prevista e as probabilidades
+            return classe_prevista, {classes[0]: prob_classe0*100, classes[1]: prob_classe1*100}
+
+        else:
+            return None, {}
 
 
     def prepare_image_for_model(self,image, target_size=(224, 224)):
@@ -592,20 +765,56 @@ class MainWindow(QMainWindow):
 
     def send_selections(self):
         global intQualPredicao
+        global porcentagemE
+        global classeEscolhida
         selected_filters = [filter.text() for filter in self.filters if filter.isChecked()]
         selected_option = self.option1.text() if self.option1.isChecked() else self.option2.text() if self.option2.isChecked() else None
-        if intQualPredicao ==4:
-            self.fazer4classes(selected_filters,selected_option)
-        percentages = [random.randint(0, 100) for _ in self.progress_bars]
-        
-        self.update_progress_bars(percentages)
-        
-        print('Filtros selecionados:', selected_filters)
-        print('Opção selecionada:', selected_option)
+        if intQualPredicao == 4:
+            classePrevista, probabilidade = self.fazer4classes(selected_filters,selected_option)
+            print(classePrevista)
+            print(probabilidade)
+
+            # Obter as porcentagens das probabilidades
+            percentages = list(probabilidade.values())
+            porcentagemE =percentages 
+            classeEscolhida=classePrevista
+            self.update_progress_bars(percentages)
+            return
+        if intQualPredicao==2:
+            classePrevista, probabilidade = self.fazer2classes(selected_filters,selected_option)
+            print(classePrevista)
+            print(probabilidade)
+            print("aki")
+            percentages = list(probabilidade.values())
+            print(percentages)
+            self.update_progress_bars(percentages)
+            return
+        else:
+            percentages = [random.randint(0, 100) for _ in self.progress_bars]
+            self.update_progress_bars(percentages)
+
+
 
     def update_progress_bars(self, percentages):
         for i, percentage in enumerate(percentages):
             self.progress_bars[i].setValue(percentage)
+            self.progress_bars[i].setStyleSheet("""
+            QProgressBar{
+                border: 2px solid black;  /* Contorno preto */
+                border-radius: 15px;
+                background-color: #FFFFFF;
+                padding: 1px;  /* Adiciona espaço ao redor da barra de progresso */
+                text-align: center;
+                color:black;
+            }
+            QProgressBar::chunk{
+                border-radius: 15px;
+                background-color: #0466C8;  /* Cor da barra de progresso */
+                margin: 1px;  /* Adiciona espaço ao redor das "fatias" */
+            }
+            """)
+
+
 
     def setup_custom_tab(self):
         self.tab2Layout = QVBoxLayout()
@@ -628,7 +837,7 @@ class MainWindow(QMainWindow):
         elif(self.ui.tabWidget.currentIndex()==1):
             self.adicionarWidgetsNaAbaFiltros()
         else:
-            print("Resultado")
+            #print("Resultado")
             self.setup_custom_tab() 
 
     def teste(self):
@@ -640,6 +849,104 @@ class MainWindow(QMainWindow):
 
     def Funcionamento(self):
         return
+
+
+    def salvar(self):
+        print("aki")
+        global porcentagemE
+        global classeEscolhida
+        global img
+        global fezerSobel
+        global fezerBinarizacao
+        global fazerForiier
+        global fazerpassaBaixa
+
+        print(img)
+        print(classeEscolhida)
+        print(porcentagemE)
+        c = canvas.Canvas('meu_arquivo.pdf', pagesize=letter)
+        width, height = letter
+
+        # Título
+        c.setFont("Helvetica", 20)
+        title = "Trabalho final de PDI"
+        title_width = c.stringWidth(title, "Helvetica", 20)
+        c.drawString((width - title_width) / 2, height - 50, title)
+
+        # Abrindo a imagem e adicionando-a ao PDF
+        #img = Image.open(img)
+        img.save('img.bmp')
+        c.drawImage('img.bmp', 50, height - 350, width=400, height=300)
+        c.setFont("Helvetica", 14)
+        c.drawString(50, height - 360, "Imagem antes da segmentação")
+
+        # Abrindo a segunda imagem e adicionando-a ao PDF
+        img2 = Image.open('App/Raio-X/SemTexto.png')
+        img2.save('App/Raio-X/SemTexto.bmp')
+        c.drawImage('App/Raio-X/SemTexto.bmp', 50, height - 650, width=400, height=300)
+        c.drawString(50, height - 660, "Imagem depois da segmentação")
+
+        c.showPage()  # Cria uma nova página
+
+        # Adicionando a classificação do grupo
+        classeEscolhida = classeEscolhida
+        c.setFont("Helvetica", 16)
+        c.drawString(50, height - 50, "Classificação do Grupo")
+        c.setFont("Helvetica", 14)
+        c.drawString(50, height - 70, str(classeEscolhida))
+
+        # Adicionando a sequência de números romanos
+        porcentagemE = [porcentagemE[0], porcentagemE[1], porcentagemE[2], porcentagemE[3]]  # Substitua pelos valores reais
+        numeros_romanos = ['I', 'II', 'III', 'IV']
+        for i in range(4):
+            c.drawString(50, height - 100 - i*20, f"{numeros_romanos[i]}: {porcentagemE[i]}%")
+
+        if fazerForiier ==1: 
+            c.showPage()
+            img2 = Image.open('App/Raio-X/EspectroFourier.png')
+            img2.save('App/Raio-X/EspectroFourier.bmp')
+            c.drawImage('App/Raio-X/EspectroFourier.bmp', 50, height - 650, width=400, height=300)
+            c.drawString(50, height - 660, "Espectro de Fourier")
+
+        if fazerpassaBaixa ==1:
+            c.showPage()
+            img2 = Image.open('App/Raio-X/PassaBaixa.png')
+            img2.save('App/Raio-X/PassaBaixa.bmp')
+            c.drawImage('App/Raio-X/PassaBaixa.bmp', 50, height - 650, width=400, height=300)
+            c.drawString(50, height - 660, "Passa Baixa")
+
+        if fezerBinarizacao ==1:
+            c.showPage()
+            img2 = Image.open('App/Raio-X/binary_image.png')
+            img2.save('App/Raio-X/binary_image.bmp')
+            c.drawImage('App/Raio-X/binary_image.bmp', 50, height - 650, width=400, height=300)
+            c.drawString(50, height - 660, "Binarização")
+
+        if fezerSobel==1:
+            c.showPage()
+            img2 = Image.open('App/Raio-X/Sobel.png')
+            img2.save('App/Raio-X/Sobel.bmp')
+            c.drawImage('App/Raio-X/Sobel.bmp', 50, height - 650, width=400, height=300)
+            c.drawString(50, height - 660, "Soble")
+
+
+
+        # Adicionando os nomes
+        c.setFont("Helvetica", 14)
+        c.drawString(50, height - 200, "Eric Azevedo")
+        c.drawString(50, height - 220, "Bran")
+        c.drawString(50, height - 240, "Alexeis")
+        print(3)
+
+       
+
+        
+        # Salvando o PDF
+        c.save()
+
+
+
+
 
     def Pontos(self):    
         logo = Logo(self)
@@ -856,7 +1163,16 @@ class MainWindow(QMainWindow):
 
         elif resposta == "Matricas":
             self.mostrarMetricas()
-    
+            if __name__ == "__main__":
+                app = QApplication(sys.argv)
+                widget = MainWindow()
+
+                widget.show()
+                sys.exit(app.exec())
+
+
+
+
 
 
 
