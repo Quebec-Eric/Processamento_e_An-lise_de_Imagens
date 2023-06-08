@@ -76,6 +76,9 @@ border-radius: 10px;</string>
       <height>51</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(0, 0, 0);</string>
+    </property>
     <property name="text">
      <string>Imagem</string>
     </property>
@@ -154,10 +157,12 @@ border-radius: 10px;</string>
      <string notr="true">border-color: rgb(0, 0, 0);
 border-style: solid;
 border-width: 2px; 
-border-radius: 20px;</string>
+border-radius: 20px;
+color: rgb(0, 0, 0);
+color: rgb(0, 0, 0);</string>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <property name="documentMode">
      <bool>false</bool>
@@ -420,6 +425,22 @@ border-radius: 20px;</string>
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>Salvar</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>salvar()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>100</x>
+     <y>42</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>721</x>
+     <y>369</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>teste()</slot>
@@ -429,5 +450,6 @@ border-radius: 20px;</string>
   <slot>Colaboradores()</slot>
   <slot>Pontos()</slot>
   <slot>IaMostrar()</slot>
+  <slot>salvar()</slot>
  </slots>
 </ui>

@@ -48,6 +48,7 @@ class Ui_MainWindow(object):
         self.pushButton = QPushButton(self.centralwidget)
         self.pushButton.setObjectName(u"pushButton")
         self.pushButton.setGeometry(QRect(110, 480, 121, 51))
+        self.pushButton.setStyleSheet(u"color: rgb(0, 0, 0);")
         self.toolButton = QToolButton(self.centralwidget)
         self.toolButton.setObjectName(u"toolButton")
         self.toolButton.setGeometry(QRect(9, -2, 51, 41))
@@ -73,7 +74,9 @@ class Ui_MainWindow(object):
         self.tabWidget.setStyleSheet(u"border-color: rgb(0, 0, 0);\n"
 "border-style: solid;\n"
 "border-width: 2px; \n"
-"border-radius: 20px;")
+"border-radius: 20px;\n"
+"color: rgb(0, 0, 0);\n"
+"color: rgb(0, 0, 0);")
         self.tabWidget.setDocumentMode(False)
         self.tabWidget.setTabsClosable(False)
         self.Imagem = QWidget()
@@ -135,8 +138,9 @@ class Ui_MainWindow(object):
         self.Colaboradores.clicked.connect(MainWindow.Colaboradores)
         self.pontos.clicked.connect(MainWindow.Pontos)
         self.IA.clicked.connect(MainWindow.IaMostrar)
+        self.Salvar.clicked.connect(MainWindow.salvar)
 
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(2)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
