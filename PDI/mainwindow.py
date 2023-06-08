@@ -128,12 +128,15 @@ class MainWindow(QMainWindow):
     def adicionarWidgetsNaAbaFiltros(self):
         # Encontra a aba "Filtros"
         for i in range(self.ui.tabWidget.count()):
-            if self.ui.tabWidget.tabText(i) == "Filtros":
+            if self.ui.tabWidget.tabText(i) == "FILTROS":
                 tab_imagem = self.ui.tabWidget.widget(i)
                 layout = QHBoxLayout(tab_imagem)
 
                 # criar o QComboBox para as escolhas
                 comboBox = QComboBox()
+                comboBox.setStyleSheet("background-color: rgb(151, 157, 172); color: white;")
+
+
                 comboBox.addItem("Esolha")
                 comboBox.addItem("Binnarização")
                 comboBox.addItem("Sobel")
@@ -553,29 +556,32 @@ class MainWindow(QMainWindow):
             "Espelho": [self.fazerEspelho(img), "App/Raio-X/Espelho.png"],
         }
 
-        
+
 
         if texto == "Sem Texto":
-            # Carrega o modelo
-            print("aki inico")
-            model = load_model('App/IA/my_model_4.h5')
+            model = tf.keras.models.load_model('Processamento_e_An-lise_de_Imagens-master\PDI\App\IA\my_model_4.h5')
 
-            # Lista para armazenar as predições
-            predictions = []
+            # Carregar e pré-processar a imagem de entrada
+            img_path = img
+            img = image.load_img(img_path, target_size=(224, 224))
+            x = image.img_to_array(img)
+            x = np.expand_dims(x, axis=0)
+            x = preprocess_input(x)
 
-            #for filter_checkbox in filtros:
-                #if filter_checkbox.isChecked():
-                    # Chama a função de filtro correspondente
-                    #operations[filter_checkbox.text()][0]()
+            # Fazer a classificação da imagem
+            predictions = model.predict(x)
 
-            
-            image = cv2.imread("App/Raio-X/PassaBaixa.png",0)
-            image = self.prepare_image_for_model(image)
-            prediction = model.predict(image)
-            predictions.append(prediction)     
+            # Definir a ordem das classes
+            classes = ["d", "e", "f", "g"]
 
-            print(predictions)
-            print("aki")
+            # Obter a classe prevista
+            indice_previsto = np.argmax(predictions)
+            classe_prevista = classes[indice_previsto]
+
+            print('Classe prevista:', classe_prevista)
+
+
+
 
 
     def prepare_image_for_model(self,image, target_size=(224, 224)):
@@ -594,8 +600,8 @@ class MainWindow(QMainWindow):
         global intQualPredicao
         selected_filters = [filter.text() for filter in self.filters if filter.isChecked()]
         selected_option = self.option1.text() if self.option1.isChecked() else self.option2.text() if self.option2.isChecked() else None
-        if intQualPredicao ==4:
-            self.fazer4classes(selected_filters,selected_option)
+        #if intQualPredicao ==4:
+            #self.fazer4classes(selected_filters,selected_option)
         percentages = [random.randint(0, 100) for _ in self.progress_bars]
         
         self.update_progress_bars(percentages)
@@ -606,6 +612,20 @@ class MainWindow(QMainWindow):
     def update_progress_bars(self, percentages):
         for i, percentage in enumerate(percentages):
             self.progress_bars[i].setValue(percentage)
+            self.progress_bars[i].setStyleSheet(""" 
+            QProgressBar{
+            border: 2px solid #457b9d;
+            border-radius: 15px;
+            background-color: #FFFFFF;
+            color:black;
+            text-align: center;
+            
+        }
+        QProgressBar::chunk{
+            border-radius: 15px;
+            background-color: #0466C8;
+        }
+        """)
 
     def setup_custom_tab(self):
         self.tab2Layout = QVBoxLayout()
