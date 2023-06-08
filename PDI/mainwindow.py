@@ -48,6 +48,10 @@ classeEscolhida=0
 l1=None
 l2=None
 test = []
+fezerSobel=0
+fezerBinarizacao=0
+fazerForiier=0
+fazerpassaBaixa=0
 intQualPredicao=0
 #janela Principal do programa onde sera realizado todo o programa em si
 class MainWindow(QMainWindow):
@@ -149,7 +153,7 @@ class MainWindow(QMainWindow):
 
                 # criar o QComboBox para as escolhas
                 comboBox = QComboBox()
-                comboBox.setStyleSheet("background-color: rgb(151, 157, 172); color: white;")
+                comboBox.setStyleSheet("background-color: rgb(151, 157, 172); color: black;")  # Texto preto
 
 
                 comboBox.addItem("Esolha")
@@ -162,7 +166,7 @@ class MainWindow(QMainWindow):
 
                 # criar os QLabels para as imagens 
                 layout1 = QVBoxLayout()
-                label1 = QLabel("Label 1")
+                label1 = QLabel("")
                 button_verificar1 = QPushButton("Verificar")
                 button_verificar1.clicked.connect(lambda: self.mostrar_imagens(comboBox, label1))
                 button_verificar1.hide()  
@@ -173,7 +177,7 @@ class MainWindow(QMainWindow):
                 layout1.addWidget(button_hist1)
 
                 layout2 = QVBoxLayout()
-                label2 = QLabel("Label 2")
+                label2 = QLabel("")
                 button_verificar2 = QPushButton("Verificar")
                 button_verificar2.clicked.connect(lambda: self.mostrar_imagens(comboBox, label2))
                 button_verificar2.hide()  
@@ -243,9 +247,14 @@ class MainWindow(QMainWindow):
         global img
         global l1, l2
         global intQual
+        global fezerSobel
+        global fezerBinarizacao
+        global fazerForiier
+        global fazerpassaBaixa
 
         if comboBox.currentText() == "Binnarização":
             intQual = 1
+            fezerBinarizacao =1
             self.textbox = QLineEdit(self)
             self.enviar_button = QPushButton('Enviar', self)
             self.enviar_button.move(320, 20) 
@@ -259,6 +268,7 @@ class MainWindow(QMainWindow):
             self.enviar_button.show() 
 
         elif comboBox.currentText() == "Sobel":
+            fezerSobel=1
             ob = sobel(img)
             rr = ob.sobel_edge_detection
             self.mostrar_imagens("App/Raio-X/Sobel.png", img, label1, label2)
@@ -268,6 +278,7 @@ class MainWindow(QMainWindow):
             button_hist2.hide()
 
         elif comboBox.currentText() == "Fourier":
+                fazerForiier =1
                 objeto_fourier = fourier(img)
                 resultado = objeto_fourier.fazerfori
                 self.mostrar_imagens("App/Raio-X/EspectroFourier.png", "App/Raio-X/ImgFourier.png", label1, label2)
@@ -289,6 +300,7 @@ class MainWindow(QMainWindow):
 
         elif comboBox.currentText() == "Passa Baixa":
                 intQual = 2
+                fazerpassaBaixa =1
                 self.textbox = QLineEdit(self)
                 self.enviar_button = QPushButton('Enviar', self)
                 self.enviar_button.move(320, 20)  
@@ -844,6 +856,11 @@ class MainWindow(QMainWindow):
         global porcentagemE
         global classeEscolhida
         global img
+        global fezerSobel
+        global fezerBinarizacao
+        global fazerForiier
+        global fazerpassaBaixa
+
         print(img)
         print(classeEscolhida)
         print(porcentagemE)
@@ -884,6 +901,36 @@ class MainWindow(QMainWindow):
         for i in range(4):
             c.drawString(50, height - 100 - i*20, f"{numeros_romanos[i]}: {porcentagemE[i]}%")
 
+        if fazerForiier ==1: 
+            c.showPage()
+            img2 = Image.open('App/Raio-X/EspectroFourier.png')
+            img2.save('App/Raio-X/EspectroFourier.bmp')
+            c.drawImage('App/Raio-X/EspectroFourier.bmp', 50, height - 650, width=400, height=300)
+            c.drawString(50, height - 660, "Espectro de Fourier")
+
+        if fazerpassaBaixa ==1:
+            c.showPage()
+            img2 = Image.open('App/Raio-X/PassaBaixa.png')
+            img2.save('App/Raio-X/PassaBaixa.bmp')
+            c.drawImage('App/Raio-X/PassaBaixa.bmp', 50, height - 650, width=400, height=300)
+            c.drawString(50, height - 660, "Passa Baixa")
+
+        if fezerBinarizacao ==1:
+            c.showPage()
+            img2 = Image.open('App/Raio-X/binary_image.png')
+            img2.save('App/Raio-X/binary_image.bmp')
+            c.drawImage('App/Raio-X/binary_image.bmp', 50, height - 650, width=400, height=300)
+            c.drawString(50, height - 660, "Binarização")
+
+        if fezerSobel==1:
+            c.showPage()
+            img2 = Image.open('App/Raio-X/Sobel.png')
+            img2.save('App/Raio-X/Sobel.bmp')
+            c.drawImage('App/Raio-X/Sobel.bmp', 50, height - 650, width=400, height=300)
+            c.drawString(50, height - 660, "Soble")
+
+
+
         # Adicionando os nomes
         c.setFont("Helvetica", 14)
         c.drawString(50, height - 200, "Eric Azevedo")
@@ -891,6 +938,9 @@ class MainWindow(QMainWindow):
         c.drawString(50, height - 240, "Alexeis")
         print(3)
 
+       
+
+        
         # Salvando o PDF
         c.save()
 
@@ -1113,7 +1163,16 @@ class MainWindow(QMainWindow):
 
         elif resposta == "Matricas":
             self.mostrarMetricas()
-    
+            if __name__ == "__main__":
+                app = QApplication(sys.argv)
+                widget = MainWindow()
+
+                widget.show()
+                sys.exit(app.exec())
+
+
+
+
 
 
 
