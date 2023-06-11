@@ -1,3 +1,10 @@
+#Pontifícia Universidade Católica de Minas Gerais (Campus Coração Eucarístico)
+#Ciência da Computação
+#Bryan Jonathan Melo De Oliveira - 708688
+#Eric Azevedo de Oliveira - 1269480
+#João Gabriel Sena Fernandes - 1209882
+
+#Dependencias
 import tensorflow as tf
 from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
@@ -24,7 +31,6 @@ for nos in modelo_base.layers:
 construido_modelo.compile(optimizer=Adam(lr=0.001), loss='binary_crossentropy', metrics=['accuracy'])
 
 #carregar os dados de trino 
-
 trai_data= ImageDataGenerator(
         rescale=1./255,
         shear_range=0.2,
@@ -45,9 +51,7 @@ end_time = time.time()
 execution_time = end_time - start_time
 print('Tempo de execução: ', execution_time)
 
-
 construido_modelo.save('my_model_binary.h5')
-
 
 test_images = []
 for img_path in test:

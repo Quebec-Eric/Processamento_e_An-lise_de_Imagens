@@ -1,3 +1,9 @@
+#Pontifícia Universidade Católica de Minas Gerais (Campus Coração Eucarístico)
+#Ciência da Computação
+#Bryan Jonathan Melo De Oliveira - 708688
+#Eric Azevedo de Oliveira - 1269480
+#João Gabriel Sena Fernandes - 1209882
+
 import sys
 sys.path.append('App/Imports')
 
